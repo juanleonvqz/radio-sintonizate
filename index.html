@@ -367,27 +367,37 @@ function initAdminForm() {
 //  DATA
 // ════════════════════════════════════════════════
 async function loadEps() {
-  // Show loading spinner while fetching
   document.getElementById('grid').innerHTML = `<div class="state-box"><div class="state-ico"><div class="spinner"></div></div><h3>Cargando episodios…</h3></div>`
 
-  const { data, error } = await sb
-    .from('episodes')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    // 8 second timeout so it never hangs forever
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
 
-  if (error) {
-    console.error('loadEps error:', error)
-    // If it's an RLS/auth error, try to fix it automatically
-    if (error.code === 'PGRST301' || error.message?.includes('RLS') || error.message?.includes('policy')) {
-      showRLSError()
-    } else {
-      showError()
+    const query = sb.from('episodes').select('*').order('created_at', { ascending: false })
+    const { data, error } = await Promise.race([query, timeout])
+
+    if (error) {
+      console.error('Supabase error:', JSON.stringify(error))
+      document.getElementById('grid').innerHTML = `<div class="state-box">
+        <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Error al cargar</h3>
+        <p>Código: ${error.code || 'desconocido'} — ${error.message || ''}<br><br>Abre la consola (F12) para más detalles.</p>
+      </div>`
+      return
     }
-    return
-  }
 
-  eps = data || []
-  renderAll()
+    console.log('Episodes loaded:', data?.length ?? 0, data)
+    eps = data || []
+    renderAll()
+
+  } catch (e) {
+    console.error('loadEps exception:', e)
+    document.getElementById('grid').innerHTML = `<div class="state-box">
+      <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
+      <h3>${e.message === 'timeout' ? 'Tiempo de espera agotado' : 'Error de conexión'}</h3>
+      <p>${e.message === 'timeout' ? 'Supabase no responde. Comprueba la URL y la clave anon en el HTML.' : e.message}</p>
+    </div>`
+  }
 }
 
 // Subscribe to realtime changes so new episodes appear instantly
