@@ -22,17 +22,24 @@
   --sl:env(safe-area-inset-left,0px);
   --sr:env(safe-area-inset-right,0px);
 }
+body.light{
+  --bg:#F5F0E8;--bg-card:#FFFFFF;--bg-card-h:#FDF8F0;
+  --cream:#1A1108;--muted:#7A6A4F;
+  --border:rgba(180,120,20,.2);--border-s:rgba(180,120,20,.5);
+}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--cream);font-family:'Karla',sans-serif;min-height:100dvh;overflow-x:hidden}
+body{background:var(--bg);color:var(--cream);font-family:'Karla',sans-serif;min-height:100dvh;overflow-x:hidden;transition:background .3s,color .3s}
 
 /* ── HEADER ── */
 header{border-bottom:1px solid var(--border);position:relative;overflow:hidden}
 header::before{content:'';position:absolute;top:-60px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,160,32,.07),transparent 70%);pointer-events:none}
 .htop{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem .9rem;display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem}
 .logo{flex:1;min-width:0}
-.eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sname{font-family:'Bebas Neue',cursive;font-size:clamp(2.6rem,11vw,7.5rem);line-height:.88;letter-spacing:2px}
+.eyebrow{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* on small screens shorten the eyebrow */
+@media(max-width:400px){.eyebrow{font-size:8px;letter-spacing:1.5px}}
+.sname{font-family:'Bebas Neue',cursive;font-size:clamp(2.4rem,10vw,7.5rem);line-height:.88;letter-spacing:2px}
 .sname em{color:var(--accent);font-style:normal}
 .stag{margin-top:.35rem;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
 .hright{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;padding-bottom:2px;flex-shrink:0}
@@ -49,6 +56,17 @@ nav::-webkit-scrollbar{display:none}
 .nl:first-child{padding-left:0}
 .nl.on{color:var(--accent);border-bottom-color:var(--accent)}
 
+/* ── THEME TOGGLE ── */
+#theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:'Karla',sans-serif;transition:all .2s;white-space:nowrap;flex-shrink:0}
+#theme-btn:hover{border-color:var(--accent);color:var(--accent)}
+.theme-icon{font-size:13px}
+
+/* ── DESCRIPTION BANNER ── */
+.desc-banner{max-width:1200px;margin:0 auto;padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;align-items:flex-start}
+.desc-icon{width:36px;height:36px;border-radius:50%;background:rgba(232,160,32,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.desc-text{}
+.desc-title{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--cream);margin-bottom:.3rem}
+.desc-body{font-size:13px;color:var(--muted);line-height:1.6}
 /* ── MAIN ── */
 main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(90px + var(--sb) + 4rem)}
 .mh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem;gap:.5rem}
@@ -182,7 +200,17 @@ textarea.fc{resize:vertical;min-height:70px}
 .pinst{background:var(--accent);color:#0C0906;border:none;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Karla',sans-serif;flex-shrink:0}
 .pdis{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0}
 
-/* ── TOAST ── */
+/* ── FOOTER ── */
+footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:1.25rem}
+.footer-links{display:flex;flex-wrap:wrap;gap:.75rem}
+.flink{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid var(--border);border-radius:30px;font-size:12px;color:var(--muted);text-decoration:none;transition:all .2s;white-space:nowrap}
+.flink:hover{border-color:var(--accent);color:var(--accent)}
+.flink svg{flex-shrink:0}
+.footer-contact{font-size:12px;color:var(--muted);line-height:1.7}
+.footer-contact a{color:var(--accent);text-decoration:none}
+.footer-contact a:hover{text-decoration:underline}
+.footer-copy{font-size:11px;color:var(--muted);opacity:.6;letter-spacing:.5px}
+
 #toast{position:fixed;bottom:calc(var(--sb) + 5.5rem);left:50%;transform:translateX(-50%) translateY(12px);background:var(--accent);color:#0C0906;padding:9px 20px;border-radius:3px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:400;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -206,7 +234,13 @@ textarea.fc{resize:vertical;min-height:70px}
       <div class="stag">La Radio del IES Mayorazgo</div>
     </div>
     <div class="hright">
-      <div class="oab"><div class="oab-dot"></div> EN ANTENA</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <button id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
+          <span class="theme-icon" id="theme-icon">☀️</span>
+          <span id="theme-lbl">Claro</span>
+        </button>
+        <div class="oab"><div class="oab-dot"></div>EN VIVO</div>
+      </div>
       <div class="wave" id="wave-el"></div>
     </div>
   </div>
@@ -214,6 +248,17 @@ textarea.fc{resize:vertical;min-height:70px}
     <button class="nl on" onclick="setFilter('all',this)">Todos</button>
   </nav>
 </header>
+
+<!-- DESCRIPTION BANNER -->
+<div class="desc-banner">
+  <div class="desc-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg>
+  </div>
+  <div class="desc-text">
+    <div class="desc-title">Bienvenidos a Radio Sintonízate</div>
+    <div class="desc-body" id="desc-body">La radio oficial del IES Mayorazgo, La Orotava, Tenerife. Aquí encontrarás todos nuestros programas, podcasts y emisiones. ¡Sintonízanos y forma parte de nuestra comunidad!</div>
+  </div>
+</div>
 
 <!-- MAIN -->
 <main>
@@ -228,6 +273,24 @@ textarea.fc{resize:vertical;min-height:70px}
     </div>
   </div>
 </main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a class="flink" href="https://sites.google.com/canariaseducacion.es/ieselmayorazgo/inicio?authuser=0" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Web del IES Mayorazgo
+    </a>
+    <a class="flink" href="https://www.instagram.com/ieselmayorazgo/reels/" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      Instagram
+    </a>
+  </div>
+  <div class="footer-contact">
+    Contacta con nosotros en <a href="mailto:38010979@gobiernodecanarias.org">38010979@gobiernodecanarias.org</a>
+  </div>
+  <div class="footer-copy">© Radio Sintonízate · IES Mayorazgo · La Orotava, Tenerife</div>
+</footer>
 
 <!-- PLAYER -->
 <div id="player">
@@ -327,7 +390,6 @@ textarea.fc{resize:vertical;min-height:70px}
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
-
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -781,6 +843,22 @@ function buildWave() {
     b.style.cssText = `height:${h}px;animation-delay:${i*.09}s`; el.appendChild(b)
   })
 }
+
+// ── THEME ──
+function applyTheme(light) {
+  document.body.classList.toggle('light', light)
+  document.getElementById('theme-icon').textContent = light ? '🌙' : '☀️'
+  document.getElementById('theme-lbl').textContent  = light ? 'Oscuro' : 'Claro'
+  // Update meta theme-color for browser chrome
+  document.querySelector('meta[name="theme-color"]').content = light ? '#F5F0E8' : '#0C0906'
+}
+function toggleTheme() {
+  const isLight = !document.body.classList.contains('light')
+  localStorage.setItem('rm-theme', isLight ? 'light' : 'dark')
+  applyTheme(isLight)
+}
+// Apply saved theme immediately on load
+applyTheme(localStorage.getItem('rm-theme') === 'light')
 </script>
 </body>
 </html>
