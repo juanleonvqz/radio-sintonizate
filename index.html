@@ -331,8 +331,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
 function coverUrl(path) {
   if (!path) return null
   return sb.storage.from('covers').getPublicUrl(path).data.publicUrl
@@ -346,17 +344,36 @@ function audioUrl(path) {
 // ════════════════════════════════════════════════
 let eps = [], activeF = 'all', curId = null, playing = false
 let pendCoverBlob = null, pendAudioFile = null
-const aud = document.getElementById('aud')
+let aud, sb
 
 // ════════════════════════════════════════════════
-//  INIT
+//  BOOT — wait for DOM + Supabase SDK
 // ════════════════════════════════════════════════
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Verify Supabase SDK loaded
+  if (typeof supabase === 'undefined') {
+    document.getElementById('grid').innerHTML = `<div class="state-box">
+      <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
+      <h3>Error de carga</h3>
+      <p>No se pudo cargar el SDK de Supabase. Comprueba tu conexión y recarga la página.</p>
+    </div>`
+    return
+  }
+
+  sb  = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  aud = document.getElementById('aud')
+
+  // Audio event listeners
+  aud.addEventListener('timeupdate', onTimeUpdate)
+  aud.addEventListener('play',  () => { playing = true;  updatePP() })
+  aud.addEventListener('pause', () => { playing = false; updatePP() })
+  aud.addEventListener('ended', () => { playing = false; updatePP(); document.getElementById('pfill').style.width = '0%' })
+
   buildWave()
   setupPWA()
   await loadEps()
   subscribeRealtime()
-})()
+})
 
 function initAdminForm() {
   const d = document.getElementById('f-date')
@@ -544,16 +561,13 @@ function updatePP() {
   document.getElementById('mwave').classList.toggle('on', playing)
 }
 
-aud.addEventListener('timeupdate', () => {
+function onTimeUpdate() {
   if (!aud.duration) return
   const p = (aud.currentTime / aud.duration) * 100
   document.getElementById('pfill').style.width = p + '%'
   document.getElementById('tcur').textContent  = ft(aud.currentTime)
   document.getElementById('ttot').textContent  = ft(aud.duration)
-})
-aud.addEventListener('play',  () => { playing = true;  updatePP() })
-aud.addEventListener('pause', () => { playing = false; updatePP() })
-aud.addEventListener('ended', () => { playing = false; updatePP(); document.getElementById('pfill').style.width = '0%' })
+}
 
 // ════════════════════════════════════════════════
 //  ADMIN AUTH
