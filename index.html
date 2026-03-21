@@ -43,10 +43,7 @@ header::before{content:'';position:absolute;top:-60px;right:-80px;width:400px;he
 .sname em{color:var(--accent);font-style:normal}
 .stag{margin-top:.35rem;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
 .hright{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;padding-bottom:2px;flex-shrink:0}
-.oab{display:flex;align-items:center;gap:6px;background:var(--red);padding:4px 10px;font-size:9px;letter-spacing:2.5px;font-weight:700;border-radius:2px;animation:pulse 2s ease-in-out infinite;white-space:nowrap}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-.oab-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:dotpulse 1s ease-in-out infinite}
-@keyframes dotpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.5}}
 .wave{display:flex;align-items:center;gap:3px;height:34px}
 .wbar{width:3px;background:var(--accent);border-radius:2px;opacity:.35;animation:wanim 1.2s ease-in-out infinite}
 @keyframes wanim{0%,100%{transform:scaleY(.15)}50%{transform:scaleY(1)}}
@@ -234,13 +231,10 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
       <div class="stag">La Radio del IES Mayorazgo</div>
     </div>
     <div class="hright">
-      <div style="display:flex;align-items:center;gap:.5rem;">
-        <button id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
-          <span class="theme-icon" id="theme-icon">☀️</span>
-          <span id="theme-lbl">Claro</span>
-        </button>
-        <div class="oab"><div class="oab-dot"></div>EN VIVO</div>
-      </div>
+      <button id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <span class="theme-icon" id="theme-icon">☀️</span>
+        <span id="theme-lbl">Claro</span>
+      </button>
       <div class="wave" id="wave-el"></div>
     </div>
   </div>
@@ -287,7 +281,7 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
     </a>
   </div>
   <div class="footer-contact">
-    Contacta con nosotros en <a href="mailto:38010979@gobiernodecanarias.org">38010979@gobiernodecanarias.org</a>
+    Contacta con nosotros en <a href="/cdn-cgi/l/email-protection#2a19121a1b1a131d136a4d4548434f5844454e4f494b444b58434b590445584d"><span class="__cf_email__" data-cfemail="dae9e2eaebeae3ede39abdb5b8b3bfa8b4b5bebfb9bbb4bba8b3bba9f4b5a8bd">[email&#160;protected]</span></a>
   </div>
   <div class="footer-copy">© Radio Sintonízate · IES Mayorazgo · La Orotava, Tenerife</div>
 </footer>
@@ -376,6 +370,16 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
         <h3 id="mgh">Episodios publicados</h3>
         <div id="mglist"></div>
       </div>
+
+      <!-- Site description editor -->
+      <div class="mgsec">
+        <h3>Descripción del sitio</h3>
+        <div class="fg" style="margin-bottom:.75rem">
+          <label>Texto de bienvenida</label>
+          <textarea class="fc" id="site-desc" rows="4" placeholder="Escribe aquí la descripción pública de la radio…"></textarea>
+        </div>
+        <button class="btnp" onclick="saveDesc()">Guardar descripción</button>
+      </div>
     </div>
   </div>
 </div>
@@ -383,13 +387,14 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
 <div id="toast"></div>
 
 <!-- Supabase JS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ════════════════════════════════════════════════
 //  ⚙️  CONFIG — replace these two values
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
+
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -433,6 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   buildWave()
   setupPWA()
+  loadSiteDesc()
   await loadEps()
   subscribeRealtime()
 })
@@ -666,10 +672,27 @@ async function doSignOut() {
   toast('Sesión cerrada.')
 }
 
+function saveDesc() {
+  const val = document.getElementById('site-desc').value.trim()
+  if (!val) { toast('Escribe algo primero.'); return }
+  localStorage.setItem('rm-site-desc', val)
+  document.getElementById('desc-body').textContent = val
+  toast('¡Descripción actualizada!')
+}
+
+function loadSiteDesc() {
+  const saved = localStorage.getItem('rm-site-desc')
+  if (saved) document.getElementById('desc-body').textContent = saved
+}
+
 function showUploadPanel() {
   document.getElementById('lpanel').style.display  = 'none'
   document.getElementById('upanel').style.display  = 'block'
   initAdminForm()
+  // Pre-fill description textarea with current text
+  const saved = localStorage.getItem('rm-site-desc')
+  const current = document.getElementById('desc-body').textContent
+  document.getElementById('site-desc').value = saved || current
   renderManage()
 }
 
@@ -853,12 +876,4 @@ function applyTheme(light) {
   document.querySelector('meta[name="theme-color"]').content = light ? '#F5F0E8' : '#0C0906'
 }
 function toggleTheme() {
-  const isLight = !document.body.classList.contains('light')
-  localStorage.setItem('rm-theme', isLight ? 'light' : 'dark')
-  applyTheme(isLight)
-}
-// Apply saved theme immediately on load
-applyTheme(localStorage.getItem('rm-theme') === 'light')
-</script>
-</body>
-</html>
+  con
