@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0C0906">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Radio Sintonízate">
@@ -394,7 +395,6 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
-
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -876,4 +876,12 @@ function applyTheme(light) {
   document.querySelector('meta[name="theme-color"]').content = light ? '#F5F0E8' : '#0C0906'
 }
 function toggleTheme() {
-  con
+  const isLight = !document.body.classList.contains('light')
+  localStorage.setItem('rm-theme', isLight ? 'light' : 'dark')
+  applyTheme(isLight)
+}
+// Apply saved theme immediately on load
+applyTheme(localStorage.getItem('rm-theme') === 'light')
+</script>
+</body>
+</html>
