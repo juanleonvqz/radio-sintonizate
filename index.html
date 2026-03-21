@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0C0906">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Radio Sintonízate">
+<link id="pwa-manifest" rel="manifest">
+<link id="apple-icon" rel="apple-touch-icon">
+<title>Radio Sintonízate · IES Mayorazgo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0C0906;--bg-card:#16100A;--bg-card-h:#1E170D;
+  --accent:#E8A020;--accent-l:#F5B830;
+  --cream:#F0E6CC;--muted:#8C7D62;
+  --red:#C83828;
+  --border:rgba(232,160,32,.18);--border-s:rgba(232,160,32,.45);
+  --sb:env(safe-area-inset-bottom,0px);
+  --sl:env(safe-area-inset-left,0px);
+  --sr:env(safe-area-inset-right,0px);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--cream);font-family:'Karla',sans-serif;min-height:100dvh;overflow-x:hidden}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-60px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,160,32,.07),transparent 70%);pointer-events:none}
+.htop{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem .9rem;display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem}
+.logo{flex:1;min-width:0}
+.eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sname{font-family:'Bebas Neue',cursive;font-size:clamp(2.6rem,11vw,7.5rem);line-height:.88;letter-spacing:2px}
+.sname em{color:var(--accent);font-style:normal}
+.stag{margin-top:.35rem;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;padding-bottom:2px;flex-shrink:0}
+.oab{display:flex;align-items:center;gap:6px;background:var(--red);padding:4px 10px;font-size:9px;letter-spacing:2.5px;font-weight:700;border-radius:2px;animation:pulse 2s ease-in-out infinite;white-space:nowrap}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.oab-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:dotpulse 1s ease-in-out infinite}
+@keyframes dotpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.5}}
+.wave{display:flex;align-items:center;gap:3px;height:34px}
+.wbar{width:3px;background:var(--accent);border-radius:2px;opacity:.35;animation:wanim 1.2s ease-in-out infinite}
+@keyframes wanim{0%,100%{transform:scaleY(.15)}50%{transform:scaleY(1)}}
+nav{max-width:1200px;margin:0 auto;padding:0 1.25rem;border-top:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.8rem .9rem .7rem;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Karla',sans-serif;white-space:nowrap;flex-shrink:0;transition:color .2s,border-color .2s}
+.nl:first-child{padding-left:0}
+.nl.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── MAIN ── */
+main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(90px + var(--sb) + 4rem)}
+.mh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem;gap:.5rem}
+.mtitle{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:2px}
+.ecount{font-size:11px;color:var(--muted);letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:.9rem}
+@media(min-width:680px){
+  .grid .card:first-child{grid-column:span 2}
+  .grid .card:first-child .ccover,.grid .card:first-child .cph{aspect-ratio:21/9}
+}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;-webkit-user-select:none;user-select:none;transition:border-color .2s,background .2s}
+@media(hover:hover){.card:hover{background:var(--bg-card-h);border-color:var(--border-s);transform:translateY(-2px)}}
+.card:active{background:var(--bg-card-h)}
+.card.playing{border-color:var(--accent)}
+.card.playing .cprog::after{content:' · ▶ reproduciendo'}
+.ccover{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.cph{width:100%;aspect-ratio:16/9;background:#1A120A;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cbody{padding:.9rem;flex:1;display:flex;flex-direction:column}
+.cprog{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:.35rem}
+.ctitle{font-family:'Playfair Display',serif;font-size:.98rem;line-height:1.4;margin-bottom:.45rem}
+.cdesc{font-size:13px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+.cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.06)}
+.cdate{font-size:11px;color:var(--muted)}
+.playbtn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.playbtn svg{margin-left:2px}
+.playbtn:active{transform:scale(.93)}
+
+/* Loading / empty */
+.state-box{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)}
+.state-ico{margin:0 auto 1rem;width:54px;height:54px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.state-box h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:.4rem}
+.state-box p{font-size:13px;max-width:280px;margin:0 auto;line-height:1.6}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PLAYER ── */
+#player{position:fixed;bottom:0;left:0;right:0;background:rgba(14,9,4,.97);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);z-index:100;padding-bottom:var(--sb);padding-left:var(--sl);padding-right:var(--sr)}
+#player.on{transform:translateY(0)}
+.pinner{display:flex;align-items:center;gap:10px;padding:10px 14px;max-width:1200px;margin:0 auto}
+.pth{width:48px;height:48px;border-radius:3px;object-fit:cover;border:1px solid var(--border);display:block;flex-shrink:0}
+.pth-ph{width:48px;height:48px;border-radius:3px;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pinfo{flex:1;min-width:0;cursor:pointer}
+.pprog-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1px}
+.ptrow{display:flex;align-items:center;gap:6px}
+.ptitle{font-family:'Playfair Display',serif;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mwave{display:none;gap:2px;align-items:center;height:10px;flex-shrink:0}
+.mwave.on{display:flex}
+.mwave span{width:2px;background:var(--accent);border-radius:1px;animation:wanim .8s ease-in-out infinite}
+.mwave span:nth-child(2){animation-delay:.1s}.mwave span:nth-child(3){animation-delay:.2s}.mwave span:nth-child(4){animation-delay:.3s}
+.pmini{margin-top:5px;height:2px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;position:relative}
+#pfill{height:100%;background:var(--accent);border-radius:2px;width:0%;pointer-events:none}
+.pctrls{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.ctrl{background:none;border:none;color:var(--muted);cursor:pointer;padding:7px;display:flex;align-items:center;border-radius:50%;min-width:38px;min-height:38px;justify-content:center}
+.ctrl:active{opacity:.5}
+#ppbtn{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#ppbtn:active{transform:scale(.93)}
+.pextra{display:none;align-items:center;gap:8px;flex-shrink:0}
+@media(min-width:600px){
+  .pinner{gap:14px;padding:10px 20px}
+  .pth,.pth-ph{width:52px;height:52px}
+  .ptitle{font-size:.92rem}
+  .pextra{display:flex}
+  .volrow{display:flex;align-items:center;gap:6px}
+  .volrow input{-webkit-appearance:none;width:68px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;outline:none;cursor:pointer}
+  .volrow input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--cream);border-radius:50%}
+  .tlbl{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+}
+.closebtn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;display:flex;align-items:center;flex-shrink:0}
+
+/* ── FAB ── */
+#fab{position:fixed;bottom:calc(var(--sb) + 1rem);right:calc(var(--sr) + 1.1rem);width:48px;height:48px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);z-index:50;box-shadow:0 4px 24px rgba(0,0,0,.55);transition:all .2s}
+#fab.up{bottom:calc(var(--sb) + 88px + 1rem)}
+#fab:hover{border-color:var(--accent);color:var(--accent)}
+#fab:active{transform:scale(.92)}
+
+/* ── ADMIN OVERLAY ── */
+#aov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.75rem;align-items:flex-start;justify-content:center}
+#aov.on{display:flex}
+.abox{background:#18110A;border:1px solid var(--border);border-radius:6px;width:100%;max-width:560px;padding:1.5rem 1.1rem;margin:auto}
+@media(min-width:460px){.abox{padding:2.25rem 2rem}}
+.aback{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:1px;color:var(--muted);background:none;border:none;cursor:pointer;margin-bottom:1.25rem;font-family:'Karla',sans-serif;padding:4px 0;min-height:36px;transition:color .2s}
+.aback:hover{color:var(--cream)}
+.atitle{font-family:'Bebas Neue',cursive;font-size:1.9rem;letter-spacing:2px;color:var(--accent);margin-bottom:.2rem}
+.asub{font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.5}
+.fg{margin-bottom:1.1rem}
+.fg label{display:block;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:.35rem}
+.fc{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:11px 12px;color:var(--cream);font-family:'Karla',sans-serif;font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fc:focus{border-color:var(--accent)}
+.fc::placeholder{color:var(--muted)}
+textarea.fc{resize:vertical;min-height:70px}
+.dz{border:2px dashed var(--border);border-radius:4px;padding:1.3rem 1rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+.dz:hover,.dz.over{border-color:var(--accent);background:rgba(232,160,32,.05)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-ico{font-size:1.5rem;margin-bottom:.3rem}
+.dz-txt{font-size:13px;color:var(--muted);line-height:1.5}
+.dz-txt strong{color:var(--accent);font-weight:500}
+.dz-fn{margin-top:.45rem;font-size:12px;color:var(--accent);font-style:italic;word-break:break-all}
+#cvwrap{margin-top:.65rem;display:none}
+#cvimg{width:100%;max-height:150px;object-fit:cover;border-radius:3px;border:1px solid var(--border)}
+.btnp{width:100%;padding:13px;background:var(--accent);color:#0C0906;border:none;border-radius:3px;font-family:'Karla',sans-serif;font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;min-height:48px;transition:background .2s}
+.btnp:disabled{opacity:.45;cursor:not-allowed}
+.btnp:active{opacity:.85}
+.btng{width:100%;padding:11px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:3px;font-family:'Karla',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;min-height:44px;margin-top:.65rem;transition:all .2s}
+.btng:hover{border-color:var(--muted);color:var(--cream)}
+.mgsec{margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.mgsec h3{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem}
+.mgitem{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mgth{width:50px;height:34px;object-fit:cover;border-radius:2px;flex-shrink:0;border:1px solid var(--border)}
+.mgthph{width:50px;height:34px;background:var(--bg);border-radius:2px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mginf{flex:1;min-width:0}
+.mgttl{font-size:13px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mgprog{font-size:9px;letter-spacing:1px;color:var(--accent);margin-top:1px}
+.btndel{background:none;border:1px solid rgba(200,56,40,.3);color:var(--red);padding:6px 9px;border-radius:2px;font-size:11px;cursor:pointer;flex-shrink:0;font-family:'Karla',sans-serif;letter-spacing:1px;min-height:36px;transition:all .2s}
+.btndel:hover{background:rgba(200,56,40,.1);border-color:var(--red)}
+.err{font-size:12px;color:var(--red);margin-top:.4rem;display:none}
+.err.on{display:block}
+#lpanel{text-align:center}
+#lpanel .fg{max-width:270px;margin:0 auto .7rem;text-align:left}
+#lpanel .btnp{max-width:270px;margin:0 auto;display:block}
+.hint{margin-top:1rem;font-size:11px;color:var(--muted)}
+
+/* ── PWA BANNER ── */
+#pbar{display:none;position:fixed;top:0;left:0;right:0;background:#1A130A;border-bottom:1px solid var(--border);padding:9px 14px;z-index:300;align-items:center;gap:10px}
+#pbar.on{display:flex}
+.pico{width:38px;height:38px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;color:#0C0906;font-size:10px;letter-spacing:1px;flex-shrink:0}
+.ptxt{flex:1;min-width:0}
+.ptxt strong{display:block;font-size:13px;color:var(--cream)}
+.ptxt span{font-size:11px;color:var(--muted)}
+.pinst{background:var(--accent);color:#0C0906;border:none;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Karla',sans-serif;flex-shrink:0}
+.pdis{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:calc(var(--sb) + 5.5rem);left:50%;transform:translateX(-50%) translateY(12px);background:var(--accent);color:#0C0906;padding:9px 20px;border-radius:3px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:400;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- PWA banner -->
+<div id="pbar">
+  <div class="pico">RS</div>
+  <div class="ptxt"><strong>Radio Sintonízate</strong><span>Instalar como app</span></div>
+  <button class="pinst" id="pwa-btn">Instalar</button>
+  <button class="pdis" onclick="dismissPWA()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="htop">
+    <div class="logo">
+      <div class="eyebrow">IES Mayorazgo · La Orotava, Tenerife</div>
+      <h1 class="sname">Radio <em>Sintonízate</em></h1>
+      <div class="stag">La Radio del IES Mayorazgo</div>
+    </div>
+    <div class="hright">
+      <div class="oab"><div class="oab-dot"></div> EN ANTENA</div>
+      <div class="wave" id="wave-el"></div>
+    </div>
+  </div>
+  <nav id="main-nav">
+    <button class="nl on" onclick="setFilter('all',this)">Todos</button>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main>
+  <div class="mh">
+    <h2 class="mtitle">Episodios</h2>
+    <span class="ecount" id="ecount"></span>
+  </div>
+  <div class="grid" id="grid">
+    <div class="state-box">
+      <div class="state-ico"><div class="spinner"></div></div>
+      <h3>Cargando episodios…</h3>
+    </div>
+  </div>
+</main>
+
+<!-- PLAYER -->
+<div id="player">
+  <div class="pinner">
+    <div id="pth-wrap">
+      <div class="pth-ph" id="pth-ph"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>
+      <img class="pth" id="pth" src="" alt="" style="display:none">
+    </div>
+    <div class="pinfo" onclick="scrollToCard()">
+      <div class="pprog-lbl" id="p-prog">Radio Sintonízate</div>
+      <div class="ptrow">
+        <div class="ptitle" id="p-title">—</div>
+        <div class="mwave" id="mwave"><span style="height:5px"></span><span style="height:9px"></span><span style="height:7px"></span><span style="height:11px"></span></div>
+      </div>
+      <div class="pmini" id="pmini" onclick="event.stopPropagation();seekMini(event)"><div id="pfill"></div></div>
+    </div>
+    <div class="pctrls">
+      <button class="ctrl" onclick="skip(-15)" aria-label="−15s"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg></button>
+      <button id="ppbtn" onclick="togglePlay()" aria-label="Play/Pausa">
+        <svg id="ico-play" width="17" height="17" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg id="ico-pause" width="17" height="17" viewBox="0 0 24 24" fill="white" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="ctrl" onclick="skip(15)" aria-label="+15s"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.51"/></svg></button>
+    </div>
+    <div class="pextra">
+      <span class="tlbl"><span id="tcur">0:00</span> / <span id="ttot">0:00</span></span>
+      <div class="volrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C7D62" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <input type="range" min="0" max="1" step="0.05" value="1" oninput="aud.volume=this.value" aria-label="Volumen">
+      </div>
+    </div>
+    <button class="closebtn" onclick="closePlayer()" aria-label="Cerrar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+</div>
+
+<audio id="aud"></audio>
+
+<!-- FAB -->
+<button id="fab" onclick="openAdmin()" aria-label="Admin">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+</button>
+
+<!-- ADMIN OVERLAY -->
+<div id="aov">
+  <div class="abox">
+    <button class="aback" onclick="closeAdmin()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Volver</button>
+
+    <!-- Login -->
+    <div id="lpanel">
+      <div class="atitle" style="color:var(--cream)">Acceso Admin</div>
+      <div class="asub">Inicia sesión con tu cuenta de administrador.</div>
+      <div class="fg"><label>Email</label><input class="fc" type="email" id="email-inp" placeholder="admin@radiosintonizate.es" autocomplete="email"></div>
+      <div class="fg"><label>Contraseña</label><input class="fc" type="password" id="pw-inp" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="err" id="pwerr">Email o contraseña incorrectos.</div>
+      <button class="btnp" id="login-btn" onclick="doLogin()">Entrar</button>
+      <p class="hint">Crea tu usuario en Supabase Dashboard → Authentication → Users</p>
+    </div>
+
+    <!-- Upload panel -->
+    <div id="upanel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;flex-wrap:wrap;gap:.5rem">
+        <div class="atitle">Nuevo episodio</div>
+        <button class="btndel" style="border-color:rgba(140,125,98,.3);color:var(--muted);" onclick="doSignOut()">Cerrar sesión</button>
+      </div>
+      <div class="asub">Rellena los datos y sube el audio.</div>
+
+      <div class="fg"><label>Nombre del programa</label><input class="fc" type="text" id="f-prog" placeholder="Noticias, Cuñas, Deportes…" autocomplete="off"></div>
+      <div class="fg"><label>Título del episodio *</label><input class="fc" type="text" id="f-ttl" placeholder="Episodio 3 — La Orotava" autocomplete="off"></div>
+      <div class="fg"><label>Descripción</label><textarea class="fc" id="f-desc" rows="3" placeholder="De qué trata este episodio…"></textarea></div>
+      <div class="fg"><label>Fecha de emisión</label><input class="fc" type="date" id="f-date"></div>
+      <div class="fg">
+        <label>Foto de portada</label>
+        <div class="dz" id="cv-dz"><input type="file" accept="image/*" onchange="onCover(event)" id="cv-inp"><div class="dz-ico">🖼️</div><div class="dz-txt">Arrastra la foto o <strong>toca aquí</strong></div><div class="dz-fn" id="cv-fn"></div></div>
+        <div id="cvwrap"><img id="cvimg" src="" alt="portada"></div>
+      </div>
+      <div class="fg">
+        <label>Archivo de audio *</label>
+        <div class="dz" id="au-dz"><input type="file" accept="audio/*" onchange="onAudio(event)" id="au-inp"><div class="dz-ico">🎙️</div><div class="dz-txt">Arrastra el audio o <strong>toca aquí</strong></div><div class="dz-fn" id="au-fn"></div></div>
+      </div>
+      <button class="btnp" id="pub-btn" onclick="publish()">Publicar episodio</button>
+
+      <div class="mgsec" id="mgsec" style="display:none">
+        <h3 id="mgh">Episodios publicados</h3>
+        <div id="mglist"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ════════════════════════════════════════════════
+//  ⚙️  CONFIG — replace these two values
+// ════════════════════════════════════════════════
+const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
+
+// ════════════════════════════════════════════════
+//  SUPABASE CLIENT
+// ════════════════════════════════════════════════
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+function coverUrl(path) {
+  if (!path) return null
+  return sb.storage.from('covers').getPublicUrl(path).data.publicUrl
+}
+function audioUrl(path) {
+  return sb.storage.from('audio').getPublicUrl(path).data.publicUrl
+}
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let eps = [], activeF = 'all', curId = null, playing = false
+let pendCoverBlob = null, pendAudioFile = null
+const aud = document.getElementById('aud')
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+(async () => {
+  buildWave()
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
+  setupPWA()
+  await loadEps()
+})()
+
+// ════════════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════════════
+async function loadEps() {
+  const { data, error } = await sb
+    .from('episodes')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) { console.error(error); showError(); return }
+  eps = data || []
+  renderAll()
+}
+
+// ════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════
+function renderAll() { renderNav(); renderGrid() }
+
+function renderNav() {
+  const progs = [...new Set(eps.map(e => e.program).filter(Boolean))]
+  const nav = document.getElementById('main-nav')
+  nav.innerHTML = `<button class="nl ${activeF==='all'?'on':''}" onclick="setFilter('all',this)">Todos</button>`
+  progs.forEach(p => {
+    nav.innerHTML += `<button class="nl ${activeF===p?'on':''}" onclick="setFilter('${esc(p)}',this)">${p}</button>`
+  })
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid')
+  const filtered = activeF === 'all' ? eps : eps.filter(e => e.program === activeF)
+  document.getElementById('ecount').textContent = eps.length + ' episodio' + (eps.length !== 1 ? 's' : '')
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="state-box">
+      <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>
+      <h3>${eps.length ? 'Sin episodios aquí' : 'Aún no hay episodios'}</h3>
+      <p>${eps.length ? 'Prueba con otro programa.' : 'Pulsa el botón de abajo para publicar el primer episodio.'}</p>
+    </div>`
+    return
+  }
+
+  grid.innerHTML = filtered.map(ep => {
+    const cv = coverUrl(ep.cover_path)
+    return `<div class="card ${ep.id===curId?'playing':''}" id="card-${ep.id}" onclick="playEp('${ep.id}')">
+      ${cv
+        ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="lazy">`
+        : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
+      <div class="cbody">
+        <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
+        <div class="ctitle">${ep.title}</div>
+        ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
+        <div class="cfoot">
+          <span class="cdate">${fmtDate(ep.date)}</span>
+          <button class="playbtn" onclick="event.stopPropagation();playEp('${ep.id}')" aria-label="Reproducir">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0C0906"><polygon points="5,3 19,12 5,21"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function showError() {
+  document.getElementById('grid').innerHTML = `<div class="state-box">
+    <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
+    <h3>Error de conexión</h3>
+    <p>Comprueba que SUPABASE_URL y SUPABASE_ANON_KEY están configurados.</p>
+  </div>`
+}
+
+function setFilter(v, btn) {
+  activeF = v
+  document.querySelectorAll('.nl').forEach(el => el.classList.remove('on'))
+  if (btn) btn.classList.add('on')
+  renderAll()
+}
+
+// ════════════════════════════════════════════════
+//  PLAYER
+// ════════════════════════════════════════════════
+async function playEp(id) {
+  const ep = eps.find(e => e.id === id)
+  if (!ep) return
+  curId = id
+
+  document.getElementById('p-prog').textContent  = ep.program || 'Radio Sintonízate'
+  document.getElementById('p-title').textContent = ep.title
+
+  const th = document.getElementById('pth'), ph = document.getElementById('pth-ph')
+  const cv = coverUrl(ep.cover_path)
+  if (cv) { th.src = cv; th.style.display = 'block'; ph.style.display = 'none' }
+  else     { th.style.display = 'none'; ph.style.display = 'flex' }
+
+  document.getElementById('player').classList.add('on')
+  document.getElementById('fab').classList.add('up')
+
+  aud.src = audioUrl(ep.audio_path)
+  aud.play().catch(() => {})
+
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'))
+  document.getElementById('card-' + id)?.classList.add('playing')
+
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: ep.title,
+      artist: ep.program || 'Radio Sintonízate',
+      album: 'IES Mayorazgo',
+      artwork: cv ? [{ src: cv, sizes: '512x512', type: 'image/jpeg' }] : []
+    })
+    navigator.mediaSession.setActionHandler('play',           () => aud.play())
+    navigator.mediaSession.setActionHandler('pause',          () => aud.pause())
+    navigator.mediaSession.setActionHandler('seekbackward',   () => skip(-15))
+    navigator.mediaSession.setActionHandler('seekforward',    () => skip(15))
+  }
+}
+
+function togglePlay() { if (!aud.src) return; playing ? aud.pause() : aud.play() }
+function skip(s)      { if (aud.src) aud.currentTime = Math.max(0, aud.currentTime + s) }
+function seekMini(e)  { if (!aud.duration) return; const b = document.getElementById('pmini'); aud.currentTime = Math.max(0, Math.min(1, (e.clientX - b.getBoundingClientRect().left) / b.offsetWidth)) * aud.duration }
+function closePlayer() {
+  aud.pause(); playing = false; curId = null
+  document.getElementById('player').classList.remove('on')
+  document.getElementById('fab').classList.remove('up')
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'))
+  updatePP()
+}
+function scrollToCard() { document.getElementById('card-' + curId)?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+function updatePP() {
+  document.getElementById('ico-play').style.display  = playing ? 'none'  : 'block'
+  document.getElementById('ico-pause').style.display = playing ? 'block' : 'none'
+  document.getElementById('mwave').classList.toggle('on', playing)
+}
+
+aud.addEventListener('timeupdate', () => {
+  if (!aud.duration) return
+  const p = (aud.currentTime / aud.duration) * 100
+  document.getElementById('pfill').style.width = p + '%'
+  document.getElementById('tcur').textContent  = ft(aud.currentTime)
+  document.getElementById('ttot').textContent  = ft(aud.duration)
+})
+aud.addEventListener('play',  () => { playing = true;  updatePP() })
+aud.addEventListener('pause', () => { playing = false; updatePP() })
+aud.addEventListener('ended', () => { playing = false; updatePP(); document.getElementById('pfill').style.width = '0%' })
+
+// ════════════════════════════════════════════════
+//  ADMIN AUTH
+// ════════════════════════════════════════════════
+async function openAdmin() {
+  document.getElementById('aov').classList.add('on')
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) showUploadPanel()
+}
+function closeAdmin() { document.getElementById('aov').classList.remove('on') }
+document.getElementById('aov').addEventListener('click', e => { if (e.target === document.getElementById('aov')) closeAdmin() })
+
+document.getElementById('pw-inp').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
+document.getElementById('email-inp').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pw-inp').focus() })
+
+async function doLogin() {
+  const email = document.getElementById('email-inp').value.trim()
+  const pw    = document.getElementById('pw-inp').value
+  const btn   = document.getElementById('login-btn')
+  const err   = document.getElementById('pwerr')
+  btn.disabled = true; btn.textContent = 'Entrando…'
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw })
+  btn.disabled = false; btn.textContent = 'Entrar'
+  if (error) { err.classList.add('on'); document.getElementById('pw-inp').value = ''; return }
+  err.classList.remove('on')
+  showUploadPanel()
+}
+
+async function doSignOut() {
+  await sb.auth.signOut()
+  document.getElementById('upanel').style.display = 'none'
+  document.getElementById('lpanel').style.display = 'block'
+  document.getElementById('pw-inp').value = ''
+  toast('Sesión cerrada.')
+}
+
+function showUploadPanel() {
+  document.getElementById('lpanel').style.display  = 'none'
+  document.getElementById('upanel').style.display  = 'block'
+  renderManage()
+}
+
+// ════════════════════════════════════════════════
+//  UPLOAD
+// ════════════════════════════════════════════════
+function onCover(e) {
+  const file = e.target.files[0]; if (!file) return
+  const reader = new FileReader()
+  reader.onload = ev => {
+    const img = new Image()
+    img.onload = () => {
+      const c = document.createElement('canvas')
+      const MAX = 900; let w = img.width, h = img.height
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
+      c.width = w; c.height = h
+      c.getContext('2d').drawImage(img, 0, 0, w, h)
+      c.toBlob(blob => {
+        pendCoverBlob = blob
+        document.getElementById('cvimg').src = URL.createObjectURL(blob)
+        document.getElementById('cvwrap').style.display = 'block'
+        document.getElementById('cv-fn').textContent = '✓ ' + file.name
+      }, 'image/jpeg', 0.82)
+    }
+    img.src = ev.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+function onAudio(e) {
+  pendAudioFile = e.target.files[0]; if (!pendAudioFile) return
+  document.getElementById('au-fn').textContent = `✓ ${pendAudioFile.name} (${(pendAudioFile.size/1024/1024).toFixed(1)} MB)`
+}
+
+;['cv-dz', 'au-dz'].forEach(id => {
+  const el = document.getElementById(id)
+  el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('over') })
+  el.addEventListener('dragleave', () => el.classList.remove('over'))
+  el.addEventListener('drop',      e => { e.preventDefault(); el.classList.remove('over') })
+})
+
+async function publish() {
+  const title = document.getElementById('f-ttl').value.trim()
+  if (!title)         { toast('El título es obligatorio.');       return }
+  if (!pendAudioFile) { toast('Debes subir un archivo de audio.'); return }
+
+  const btn = document.getElementById('pub-btn')
+  btn.disabled = true; btn.textContent = 'Subiendo audio…'
+
+  try {
+    const ts        = Date.now()
+    const safeAudio = pendAudioFile.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')
+    const audioPath = `${ts}-${safeAudio}`
+
+    // 1 — Upload audio
+    const { error: ae } = await sb.storage.from('audio').upload(audioPath, pendAudioFile, { contentType: pendAudioFile.type })
+    if (ae) throw ae
+
+    // 2 — Upload cover (resized blob)
+    let coverPath = null
+    if (pendCoverBlob) {
+      btn.textContent = 'Subiendo portada…'
+      coverPath = `${ts}-cover.jpg`
+      const { error: ce } = await sb.storage.from('covers').upload(coverPath, pendCoverBlob, { contentType: 'image/jpeg' })
+      if (ce) console.warn('Cover upload failed:', ce)
+    }
+
+    // 3 — Insert row
+    btn.textContent = 'Guardando…'
+    const { error: de } = await sb.from('episodes').insert({
+      title,
+      program:     document.getElementById('f-prog').value.trim(),
+      description: document.getElementById('f-desc').value.trim(),
+      date:        document.getElementById('f-date').value,
+      audio_path:  audioPath,
+      cover_path:  coverPath
+    })
+    if (de) throw de
+
+    // 4 — Reset form
+    ;['f-ttl', 'f-prog', 'f-desc'].forEach(id => document.getElementById(id).value = '')
+    document.getElementById('f-date').value  = new Date().toISOString().split('T')[0]
+    document.getElementById('cv-fn').textContent = ''
+    document.getElementById('au-fn').textContent = ''
+    document.getElementById('cvwrap').style.display = 'none'
+    document.getElementById('cv-inp').value = ''
+    document.getElementById('au-inp').value = ''
+    pendCoverBlob = null; pendAudioFile = null
+
+    await loadEps()
+    renderManage()
+    toast('¡Episodio publicado!')
+  } catch (err) {
+    toast('Error al publicar. Revisa la consola.')
+    console.error(err)
+  }
+  btn.disabled = false; btn.textContent = 'Publicar episodio'
+}
+
+async function deleteEp(id) {
+  if (!confirm('¿Eliminar este episodio? No se puede deshacer.')) return
+  const ep = eps.find(e => e.id === id); if (!ep) return
+  const { error } = await sb.from('episodes').delete().eq('id', id)
+  if (error) { toast('Error al eliminar.'); return }
+  await sb.storage.from('audio').remove([ep.audio_path])
+  if (ep.cover_path) await sb.storage.from('covers').remove([ep.cover_path])
+  if (curId === id) closePlayer()
+  await loadEps()
+  renderManage()
+  toast('Episodio eliminado.')
+}
+
+function renderManage() {
+  const sec  = document.getElementById('mgsec')
+  const list = document.getElementById('mglist')
+  if (!eps.length) { sec.style.display = 'none'; return }
+  sec.style.display = 'block'
+  document.getElementById('mgh').textContent = `Episodios publicados (${eps.length})`
+  list.innerHTML = eps.map(ep => {
+    const cv = coverUrl(ep.cover_path)
+    return `<div class="mgitem">
+      ${cv ? `<img class="mgth" src="${cv}" alt="">` : `<div class="mgthph"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>`}
+      <div class="mginf">
+        <div class="mgttl">${ep.title}</div>
+        <div class="mgprog">${ep.program || 'Sin programa'} · ${fmtDate(ep.date)}</div>
+      </div>
+      <button class="btndel" onclick="deleteEp('${ep.id}')">Eliminar</button>
+    </div>`
+  }).join('')
+}
+
+// ════════════════════════════════════════════════
+//  PWA
+// ════════════════════════════════════════════════
+function setupPWA() {
+  function icon(s) {
+    const c = document.createElement('canvas'); c.width = c.height = s
+    const x = c.getContext('2d')
+    x.fillStyle = '#0C0906'; x.fillRect(0, 0, s, s)
+    x.fillStyle = '#E8A020'; x.font = `bold ${Math.round(s*.35)}px sans-serif`
+    x.textAlign = 'center'; x.textBaseline = 'middle'
+    x.fillText('RS', s/2, s/2)
+    return c.toDataURL('image/png')
+  }
+  const mf = { name: 'Radio Sintonízate', short_name: 'Radio Sintonízate', start_url: './', display: 'standalone', background_color: '#0C0906', theme_color: '#0C0906', orientation: 'portrait-primary', icons: [{ src: icon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' }, { src: icon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] }
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/json' }))
+  document.getElementById('apple-icon').href = icon(180)
+  if ('serviceWorker' in navigator) {
+    const sw = `const C='rm-v2';self.addEventListener('install',e=>{self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim()});self.addEventListener('fetch',e=>{if(e.request.url.includes('supabase'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' })), { scope: './' }).catch(() => {})
+  }
+}
+
+let _dp = null
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _dp = e; if (!sessionStorage.getItem('pwa-dis')) document.getElementById('pbar').classList.add('on') })
+document.getElementById('pwa-btn').onclick = async () => { if (!_dp) return; _dp.prompt(); const { outcome } = await _dp.userChoice; _dp = null; document.getElementById('pbar').classList.remove('on'); if (outcome === 'accepted') toast('¡App instalada!') }
+function dismissPWA() { document.getElementById('pbar').classList.remove('on'); sessionStorage.setItem('pwa-dis', '1') }
+window.addEventListener('appinstalled', () => document.getElementById('pbar').classList.remove('on'))
+
+// ════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════
+function ft(s) { if (!s || isNaN(s)) return '0:00'; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` }
+function fmtDate(d) { if (!d) return ''; try { return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) } catch { return d } }
+function esc(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;') }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3200) }
+function buildWave() {
+  const el = document.getElementById('wave-el')
+  ;[9,20,35,25,12,40,22,10,32,18,42].forEach((h, i) => {
+    const b = document.createElement('div'); b.className = 'wbar'
+    b.style.cssText = `height:${h}px;animation-delay:${i*.09}s`; el.appendChild(b)
+  })
+}
+</script>
+</body>
+</html>
