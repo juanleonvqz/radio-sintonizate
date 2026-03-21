@@ -327,7 +327,6 @@ textarea.fc{resize:vertical;min-height:70px}
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
-
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -353,10 +352,14 @@ const aud = document.getElementById('aud')
 // ════════════════════════════════════════════════
 (async () => {
   buildWave()
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
   setupPWA()
   await loadEps()
 })()
+
+function initAdminForm() {
+  const d = document.getElementById('f-date')
+  if (d) d.value = new Date().toISOString().split('T')[0]
+}
 
 // ════════════════════════════════════════════════
 //  DATA
@@ -540,6 +543,7 @@ async function doSignOut() {
 function showUploadPanel() {
   document.getElementById('lpanel').style.display  = 'none'
   document.getElementById('upanel').style.display  = 'block'
+  initAdminForm()
   renderManage()
 }
 
