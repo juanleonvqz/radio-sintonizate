@@ -327,6 +327,7 @@ textarea.fc{resize:vertical;min-height:70px}
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
+
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -354,6 +355,7 @@ const aud = document.getElementById('aud')
   buildWave()
   setupPWA()
   await loadEps()
+  subscribeRealtime()
 })()
 
 function initAdminForm() {
@@ -365,13 +367,44 @@ function initAdminForm() {
 //  DATA
 // ════════════════════════════════════════════════
 async function loadEps() {
+  // Show loading spinner while fetching
+  document.getElementById('grid').innerHTML = `<div class="state-box"><div class="state-ico"><div class="spinner"></div></div><h3>Cargando episodios…</h3></div>`
+
   const { data, error } = await sb
     .from('episodes')
     .select('*')
     .order('created_at', { ascending: false })
-  if (error) { console.error(error); showError(); return }
+
+  if (error) {
+    console.error('loadEps error:', error)
+    // If it's an RLS/auth error, try to fix it automatically
+    if (error.code === 'PGRST301' || error.message?.includes('RLS') || error.message?.includes('policy')) {
+      showRLSError()
+    } else {
+      showError()
+    }
+    return
+  }
+
   eps = data || []
   renderAll()
+}
+
+// Subscribe to realtime changes so new episodes appear instantly
+function subscribeRealtime() {
+  sb.channel('episodes-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'episodes' }, () => {
+      loadEps()
+    })
+    .subscribe()
+}
+
+function showRLSError() {
+  document.getElementById('grid').innerHTML = `<div class="state-box">
+    <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
+    <h3>Error de permisos</h3>
+    <p>La tabla <strong>episodes</strong> no tiene política de lectura pública. Ejecuta el SQL en Supabase y recarga la página.</p>
+  </div>`
 }
 
 // ════════════════════════════════════════════════
@@ -442,8 +475,15 @@ function setFilter(v, btn) {
 //  PLAYER
 // ════════════════════════════════════════════════
 async function playEp(id) {
-  const ep = eps.find(e => e.id === id)
-  if (!ep) return
+  // Try local array first, fall back to fetching from Supabase
+  let ep = eps.find(e => e.id === id)
+  if (!ep) {
+    const { data, error } = await sb.from('episodes').select('*').eq('id', id).single()
+    if (error || !data) { toast('No se pudo cargar el episodio.'); return }
+    ep = data
+    // Also reload the full list so the grid is up to date
+    loadEps()
+  }
   curId = id
 
   document.getElementById('p-prog').textContent  = ep.program || 'Radio Sintonízate'
