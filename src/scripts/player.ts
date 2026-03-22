@@ -94,6 +94,8 @@ function updatePP() {
   if (play)  play.style.display  = playing ? 'none'  : 'block'
   if (pause) pause.style.display = playing ? 'block' : 'none'
   wave?.classList.toggle('on', playing)
+  // Sync card play/pause icons
+  notifyGrid()
 }
 
 function onTimeUpdate() {
@@ -131,4 +133,9 @@ export function toast(msg: string) {
   if (!t) return
   t.textContent = msg; t.classList.add('on')
   setTimeout(() => { t.classList.remove('on') }, 3200)
+}
+
+// Imported lazily to avoid circular dependency
+function notifyGrid() {
+  import('./grid').then(m => m.syncCardStates())
 }

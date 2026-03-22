@@ -1,8 +1,10 @@
 import { coverUrl } from '../lib/supabase'
-import { eps, playEp } from './player'
+import { eps, curId, playing, playEp, aud, skip } from './player'
 import { shareEp } from './share'
+import type { Episode } from '../lib/types'
 
 let activeF = 'all'
+let currentModalId: string | null = null
 
 export function renderAll() {
   renderNav()
@@ -16,21 +18,39 @@ export function setFilter(v: string, btn?: HTMLElement) {
   renderAll()
 }
 
+// Called by player.ts on every play/pause/timeupdate change
+export function syncCardStates() {
+  document.querySelectorAll<HTMLElement>('.card').forEach(card => {
+    const id = card.dataset.id
+    const isThis = id === curId
+    card.classList.toggle('playing', isThis && playing)
+    card.classList.toggle('paused',  isThis && !playing && curId !== null)
+    const playIco  = card.querySelector<SVGElement>('.card-play-ico')
+    const pauseIco = card.querySelector<SVGElement>('.card-pause-ico')
+    if (playIco && pauseIco) {
+      playIco.style.display  = (isThis && playing) ? 'none'  : 'block'
+      pauseIco.style.display = (isThis && playing) ? 'block' : 'none'
+    }
+  })
+  // Also sync modal if it's open
+  if (currentModalId) syncModal()
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
 function renderNav() {
   const progs = [...new Set(eps.map(e => e.program).filter(Boolean))]
   const nav = document.getElementById('main-nav')
   if (!nav) return
-
   nav.innerHTML = `<button class="nl ${activeF === 'all' ? 'on' : ''}" data-filter="all">Todos</button>`
   progs.forEach(p => {
     nav.innerHTML += `<button class="nl ${activeF === p ? 'on' : ''}" data-filter="${esc(p!)}">${p}</button>`
   })
-
   nav.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter!, btn))
   })
 }
 
+// ── Grid ──────────────────────────────────────────────────────────────────────
 function renderGrid() {
   const grid    = document.getElementById('grid')
   const countEl = document.getElementById('ecount')
@@ -48,13 +68,24 @@ function renderGrid() {
     return
   }
 
-  grid.innerHTML = filtered.map(ep => {
+  // Flat grid — sorted newest first, small month badge per card
+  const sorted = [...filtered].sort((a, b) => {
+    if (!a.date && !b.date) return 0
+    if (!a.date) return 1
+    if (!b.date) return -1
+    return b.date.localeCompare(a.date)
+  })
+
+  grid.innerHTML = `<div class="episodes-flat">${sorted.map(ep => {
     const cv = coverUrl(ep.cover_path)
-    return `<div class="card" id="card-${ep.id}" data-id="${ep.id}">
+    const isPlaying = ep.id === curId && playing
+    const isPaused  = ep.id === curId && !playing && curId !== null
+    return `<div class="card ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''}" id="card-${ep.id}" data-id="${ep.id}">
       ${cv
         ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="lazy">`
         : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
       <div class="cbody">
+        ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
         <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
         <div class="ctitle">${ep.title}</div>
         ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
@@ -64,18 +95,22 @@ function renderGrid() {
             <button class="sharebtn" data-share="${ep.id}" aria-label="Compartir">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </button>
-            <button class="playbtn" data-play="${ep.id}" aria-label="Reproducir">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#0C0906"><polygon points="5,3 19,12 5,21"/></svg>
+            <button class="playbtn" data-play="${ep.id}" aria-label="${isPlaying ? 'Pausar' : 'Reproducir'}">
+              <svg class="card-play-ico"  width="14" height="14" viewBox="0 0 24 24" fill="#0C0906" style="display:${isPlaying ? 'none' : 'block'}"><polygon points="5,3 19,12 5,21"/></svg>
+              <svg class="card-pause-ico" width="14" height="14" viewBox="0 0 24 24" fill="#0C0906" style="display:${isPlaying ? 'block' : 'none'}"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             </button>
           </div>
         </div>
       </div>
     </div>`
-  }).join('')
+  }).join('')}</div>`
 
-  // Wire up click handlers (no inline onclick — clean separation)
+  // Wire click handlers
   grid.querySelectorAll<HTMLElement>('[data-id]').forEach(card => {
-    card.addEventListener('click', () => playEp(card.dataset.id!))
+    card.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return
+      openEpisodeModal(card.dataset.id!)
+    })
   })
   grid.querySelectorAll<HTMLButtonElement>('[data-play]').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); playEp(btn.dataset.play!) })
@@ -85,10 +120,189 @@ function renderGrid() {
   })
 }
 
+// ── Episode modal ─────────────────────────────────────────────────────────────
+export function openEpisodeModal(id: string) {
+  const ep = eps.find(e => e.id === id)
+  if (!ep) return
+
+  currentModalId = id
+  const cv = coverUrl(ep.cover_path)
+  const isPlaying = id === curId && playing
+
+  const modal = document.getElementById('ep-modal')
+  const inner = document.getElementById('ep-modal-inner')
+  if (!modal || !inner) return
+
+  inner.innerHTML = `
+    <div class="modal-hero">
+      ${cv
+        ? `<img class="modal-cover" src="${cv}" alt="${ep.title}">`
+        : `<div class="modal-cover-ph">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1">
+              <circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/>
+            </svg>
+          </div>`}
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-meta">
+        <div class="modal-prog">${ep.program || 'Radio Sintonízate'}</div>
+        ${ep.date ? `<div class="modal-date">${fmtDate(ep.date)}</div>` : ''}
+      </div>
+      <h2 class="modal-title">${ep.title}</h2>
+      ${ep.description ? `<p class="modal-desc">${ep.description}</p>` : ''}
+
+      <!-- Built-in player -->
+      <div class="modal-player">
+        <!-- Progress bar + time -->
+        <div class="modal-progress-row">
+          <span class="modal-time" id="modal-tcur">0:00</span>
+          <div class="modal-progress-bar" id="modal-progress-bar">
+            <div class="modal-progress-fill" id="modal-pfill"></div>
+            <div class="modal-progress-thumb" id="modal-thumb"></div>
+          </div>
+          <span class="modal-time" id="modal-ttot">0:00</span>
+        </div>
+
+        <!-- Controls -->
+        <div class="modal-controls">
+          <button class="modal-skip-btn" id="modal-skip-back" aria-label="−15s">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            <span>15</span>
+          </button>
+
+          <button class="modal-play-btn" id="modal-ppbtn" data-modal-play="${ep.id}">
+            <svg class="modal-play-ico"  width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:${isPlaying ? 'none' : 'block'}"><polygon points="5,3 19,12 5,21"/></svg>
+            <svg class="modal-pause-ico" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:${isPlaying ? 'block' : 'none'}"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+
+          <button class="modal-skip-btn" id="modal-skip-fwd" aria-label="+15s">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.51"/></svg>
+            <span>15</span>
+          </button>
+
+          <button class="modal-share-btn" data-modal-share="${ep.id}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Compartir
+          </button>
+        </div>
+      </div>
+    </div>`
+
+  // Play/pause
+  inner.getElementById?.('modal-ppbtn')
+  const ppBtn = inner.querySelector<HTMLButtonElement>('#modal-ppbtn')
+  ppBtn?.addEventListener('click', () => {
+    if (id !== curId) {
+      playEp(id)
+    } else {
+      import('./player').then(m => m.togglePlay())
+    }
+  })
+
+  // Skip buttons
+  inner.querySelector<HTMLButtonElement>('#modal-skip-back')?.addEventListener('click', () => skip(-15))
+  inner.querySelector<HTMLButtonElement>('#modal-skip-fwd') ?.addEventListener('click', () => skip(15))
+
+  // Seek on progress bar
+  const bar = inner.querySelector<HTMLElement>('#modal-progress-bar')
+  bar?.addEventListener('click', (e) => {
+    const audEl = document.getElementById('aud') as HTMLAudioElement | null
+    if (!audEl?.duration) return
+    const rect = bar.getBoundingClientRect()
+    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    audEl.currentTime = pct * audEl.duration
+  })
+
+  // Touch seek for mobile
+  bar?.addEventListener('touchstart', (e) => {
+    const audEl = document.getElementById('aud') as HTMLAudioElement | null
+    if (!audEl?.duration) return
+    const rect = bar.getBoundingClientRect()
+    const touch = e.touches[0]
+    const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
+    audEl.currentTime = pct * audEl.duration
+    e.preventDefault()
+  }, { passive: false })
+
+  // Share
+  inner.querySelector<HTMLButtonElement>('[data-modal-share]')?.addEventListener('click', () => shareEp(ep.id))
+
+  modal.classList.add('on')
+  document.body.style.overflow = 'hidden'
+
+  // Start syncing modal progress
+  startModalSync()
+}
+
+export function closeEpisodeModal() {
+  document.getElementById('ep-modal')?.classList.remove('on')
+  document.body.style.overflow = ''
+  currentModalId = null
+  stopModalSync()
+}
+
+// ── Modal sync ────────────────────────────────────────────────────────────────
+let modalSyncInterval: ReturnType<typeof setInterval> | null = null
+
+function startModalSync() {
+  stopModalSync()
+  modalSyncInterval = setInterval(syncModal, 250)
+}
+
+function stopModalSync() {
+  if (modalSyncInterval) { clearInterval(modalSyncInterval); modalSyncInterval = null }
+}
+
+function syncModal() {
+  if (!currentModalId) return
+  const audEl = document.getElementById('aud') as HTMLAudioElement | null
+  if (!audEl) return
+
+  const isThis    = currentModalId === curId
+  const nowPlaying = isThis && playing
+
+  // Icons
+  const pi  = document.querySelector<SVGElement>('#ep-modal-inner .modal-play-ico')
+  const pa  = document.querySelector<SVGElement>('#ep-modal-inner .modal-pause-ico')
+  if (pi && pa) {
+    pi.style.display = nowPlaying ? 'none' : 'block'
+    pa.style.display = nowPlaying ? 'block' : 'none'
+  }
+
+  // Progress
+  if (isThis && audEl.duration) {
+    const pct = (audEl.currentTime / audEl.duration) * 100
+    const fill  = document.getElementById('modal-pfill')
+    const thumb = document.getElementById('modal-thumb')
+    const cur   = document.getElementById('modal-tcur')
+    const tot   = document.getElementById('modal-ttot')
+    if (fill)  fill.style.width  = `${pct}%`
+    if (thumb) thumb.style.left  = `${pct}%`
+    if (cur)   cur.textContent   = ft(audEl.currentTime)
+    if (tot)   tot.textContent   = ft(audEl.duration)
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function monthBadge(d: string): string {
+  try {
+    const date = new Date(d + 'T12:00:00')
+    const m = date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '')
+    const y = date.getFullYear()
+    return `<span class="cmonth-badge">${m} ${y}</span>`
+  } catch { return '' }
+}
+
 function fmtDate(d: string | null): string {
   if (!d) return ''
   try { return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }
   catch { return d }
+}
+
+function ft(s: number): string {
+  if (!s || isNaN(s)) return '0:00'
+  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
 
 function esc(s: string): string {

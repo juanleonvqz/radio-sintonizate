@@ -14,6 +14,7 @@ import { fetchEpisodes, subscribeToEpisodes } from '../lib/supabase'
 import { initTheme, toggleTheme }             from './theme'
 import { initPlayer, togglePlay, skip, seekMini, closePlayer, scrollToCard, setEps, eps } from './player'
 import { renderAll }                          from './grid'
+import { closeEpisodeModal }                  from './grid'
 import { openAdmin, closeAdmin, doLogin, doSignOut, onCover, onAudio, publish, saveDesc, loadSiteDesc, initDropZones } from './admin'
 import { setupPWA, initInstallPrompt, promptInstall, dismissPWA } from './pwa'
 import { checkDeepLink, generateRSS }         from './share'
@@ -78,6 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('cv-inp')          ?.addEventListener('change', onCover)
   document.getElementById('au-inp')          ?.addEventListener('change', onAudio)
   initDropZones()
+
+  // ── Episode modal ─────────────────────────────────────────────────────────────
+  document.getElementById('ep-modal-close')   ?.addEventListener('click', closeEpisodeModal)
+  document.getElementById('ep-modal-backdrop')?.addEventListener('click', closeEpisodeModal)
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEpisodeModal() })
 
   // ── RSS button ────────────────────────────────────────────────────────────────
   document.getElementById('rss-btn')?.addEventListener('click', () => generateRSS(eps))
