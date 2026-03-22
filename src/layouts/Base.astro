@@ -18,6 +18,9 @@ const { title = 'Radio Sintonízate · IES El Mayorazgo' } = Astro.props
   <link id="pwa-manifest" rel="manifest" />
   <link id="apple-icon"   rel="apple-touch-icon" />
   <title>{title}</title>
+  <!-- Preconnect to font CDN — reduces first load latency -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;700&family=Karla:wght@400;500;600&display=swap"
     rel="stylesheet"

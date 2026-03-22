@@ -21,17 +21,22 @@ export function audioUrl(path: string): string {
 // ── Episode queries ───────────────────────────────────────────────────────────
 
 export async function fetchEpisodes(): Promise<Episode[]> {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 8000)
-  )
-  const query = sb
-    .from('episodes')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
 
-  const { data, error } = await Promise.race([query, timeout]) as Awaited<typeof query>
-  if (error) throw error
-  return data ?? []
+  try {
+    const { data, error } = await sb
+      .from('episodes')
+      .select('*')
+      .order('created_at', { ascending: false })
+    clearTimeout(timer)
+    if (error) throw error
+    return data ?? []
+  } catch (err: any) {
+    clearTimeout(timer)
+    if (err.name === 'AbortError') throw new Error('timeout')
+    throw err
+  }
 }
 
 export async function fetchEpisodeById(id: string): Promise<Episode | null> {
