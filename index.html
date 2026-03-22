@@ -22,37 +22,104 @@
   --sb:env(safe-area-inset-bottom,0px);
   --sl:env(safe-area-inset-left,0px);
   --sr:env(safe-area-inset-right,0px);
+  /* Admin panel */
+  --admin-bg:#18110A;
+  --admin-overlay:rgba(0,0,0,.9);
+  --admin-input-bg:rgba(255,255,255,.05);
+  --admin-sep:rgba(255,255,255,.05);
+  --pwa-bg:#1A130A;
 }
 body.light{
   --bg:#F5F0E8;--bg-card:#FFFFFF;--bg-card-h:#FDF8F0;
   --cream:#1A1108;--muted:#7A6A4F;
   --border:rgba(180,120,20,.2);--border-s:rgba(180,120,20,.5);
+  /* Admin panel — light */
+  --admin-bg:#FFFFFF;
+  --admin-overlay:rgba(0,0,0,.6);
+  --admin-input-bg:rgba(0,0,0,.04);
+  --admin-sep:rgba(0,0,0,.07);
+  --pwa-bg:#FDF8F0;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--cream);font-family:'Karla',sans-serif;min-height:100dvh;overflow-x:hidden;transition:background .3s,color .3s}
 
 /* ── HEADER ── */
-header{border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-header::before{content:'';position:absolute;top:-60px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,160,32,.07),transparent 70%);pointer-events:none}
-.htop{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem .9rem;display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem}
+header{
+  position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#091520 0%,#0D1E2E 60%,#0A1018 100%);
+  border-bottom:1px solid rgba(212,168,60,.35);
+}
+/* Gold ornamental top border line */
+header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#D4A83C 20%,#F5C842 50%,#D4A83C 80%,transparent);
+}
+/* Subtle radial glow */
+header::after{
+  content:'';position:absolute;top:-40px;right:-60px;
+  width:350px;height:350px;
+  background:radial-gradient(circle,rgba(212,168,60,.09) 0%,transparent 70%);
+  pointer-events:none;
+}
+/* Gold corner ornament — top left */
+.corner-tl,.corner-tr{
+  position:absolute;top:10px;
+  width:40px;height:40px;
+  opacity:.28;pointer-events:none;
+}
+.corner-tl{left:10px}
+.corner-tr{right:10px;transform:scaleX(-1)}
+
+.htop{max-width:1200px;margin:0 auto;padding:1.4rem 1.25rem 1rem;display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;position:relative;z-index:1}
 .logo{flex:1;min-width:0}
-.eyebrow{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* on small screens shorten the eyebrow */
+.eyebrow{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:#D4A83C;margin-bottom:.3rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 @media(max-width:400px){.eyebrow{font-size:8px;letter-spacing:1.5px}}
-.sname{font-family:'Bebas Neue',cursive;font-size:clamp(2.4rem,10vw,7.5rem);line-height:.88;letter-spacing:2px}
-.sname em{color:var(--accent);font-style:normal}
-.stag{margin-top:.35rem;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
-.hright{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;padding-bottom:2px;flex-shrink:0}
+.sname{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(2.6rem,11vw,7.5rem);
+  line-height:.88;letter-spacing:3px;
+  color:#F0E6CC;
+  text-shadow:0 0 40px rgba(212,168,60,.25);
+}
+.sname em{
+  color:#D4A83C;font-style:normal;
+  background:linear-gradient(135deg,#F5C842,#C8960A);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+/* School badge pill */
+.school-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:.55rem;
+  padding:3px 10px 3px 8px;
+  border:1px solid rgba(212,168,60,.4);
+  border-radius:20px;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(212,168,60,.8);
+  background:rgba(212,168,60,.07);
+  width:fit-content;
+}
+.school-badge-dot{width:5px;height:5px;border-radius:50%;background:#D4A83C;opacity:.7;flex-shrink:0}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;padding-bottom:2px;flex-shrink:0;position:relative;z-index:1}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-.wave{display:flex;align-items:center;gap:3px;height:34px}
-.wbar{width:3px;background:var(--accent);border-radius:2px;opacity:.35;animation:wanim 1.2s ease-in-out infinite}
+.wave{display:flex;align-items:center;gap:3px;height:32px}
+.wbar{width:3px;background:#D4A83C;border-radius:2px;opacity:.5;animation:wanim 1.2s ease-in-out infinite}
 @keyframes wanim{0%,100%{transform:scaleY(.15)}50%{transform:scaleY(1)}}
-nav{max-width:1200px;margin:0 auto;padding:0 1.25rem;border-top:1px solid var(--border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav{
+  max-width:1200px;margin:0 auto;padding:0 1.25rem;
+  border-top:1px solid rgba(212,168,60,.18);
+  display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  position:relative;z-index:1;
+  background:rgba(9,21,32,.6);
+}
 nav::-webkit-scrollbar{display:none}
-.nl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.8rem .9rem .7rem;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Karla',sans-serif;white-space:nowrap;flex-shrink:0;transition:color .2s,border-color .2s}
+.nl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(212,168,60,.5);padding:.8rem .9rem .7rem;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Karla',sans-serif;white-space:nowrap;flex-shrink:0;transition:color .2s,border-color .2s}
 .nl:first-child{padding-left:0}
-.nl.on{color:var(--accent);border-bottom-color:var(--accent)}
+.nl.on{color:#D4A83C;border-bottom-color:#D4A83C}
 
 /* ── THEME TOGGLE ── */
 #theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:'Karla',sans-serif;transition:all .2s;white-space:nowrap;flex-shrink:0}
@@ -88,11 +155,15 @@ main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(9
 .cprog{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:.35rem}
 .ctitle{font-family:'Playfair Display',serif;font-size:.98rem;line-height:1.4;margin-bottom:.45rem}
 .cdesc{font-size:13px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1}
-.cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.06)}
+.cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--admin-sep)}
 .cdate{font-size:11px;color:var(--muted)}
+.cbtns{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .playbtn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .playbtn svg{margin-left:2px}
 .playbtn:active{transform:scale(.93)}
+.sharebtn{width:34px;height:34px;border-radius:50%;background:transparent;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted);transition:all .2s}
+.sharebtn:hover{border-color:var(--accent);color:var(--accent)}
+.sharebtn:active{transform:scale(.93)}
 
 /* Loading / empty */
 .state-box{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)}
@@ -103,7 +174,8 @@ main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(9
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── PLAYER ── */
-#player{position:fixed;bottom:0;left:0;right:0;background:rgba(14,9,4,.97);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);z-index:100;padding-bottom:var(--sb);padding-left:var(--sl);padding-right:var(--sr)}
+#player{position:fixed;bottom:0;left:0;right:0;background:rgba(14,9,4,.97);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1),background .3s;z-index:100;padding-bottom:var(--sb);padding-left:var(--sl);padding-right:var(--sr)}
+body.light #player{background:rgba(245,240,232,.97)}
 #player.on{transform:translateY(0)}
 .pinner{display:flex;align-items:center;gap:10px;padding:10px 14px;max-width:1200px;margin:0 auto}
 .pth{width:48px;height:48px;border-radius:3px;object-fit:cover;border:1px solid var(--border);display:block;flex-shrink:0}
@@ -143,9 +215,9 @@ main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(9
 #fab:active{transform:scale(.92)}
 
 /* ── ADMIN OVERLAY ── */
-#aov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.75rem;align-items:flex-start;justify-content:center}
+#aov{display:none;position:fixed;inset:0;background:var(--admin-overlay);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.75rem;align-items:flex-start;justify-content:center}
 #aov.on{display:flex}
-.abox{background:#18110A;border:1px solid var(--border);border-radius:6px;width:100%;max-width:560px;padding:1.5rem 1.1rem;margin:auto}
+.abox{background:var(--admin-bg);border:1px solid var(--border);border-radius:6px;width:100%;max-width:560px;padding:1.5rem 1.1rem;margin:auto;transition:background .3s}
 @media(min-width:460px){.abox{padding:2.25rem 2rem}}
 .aback{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:1px;color:var(--muted);background:none;border:none;cursor:pointer;margin-bottom:1.25rem;font-family:'Karla',sans-serif;padding:4px 0;min-height:36px;transition:color .2s}
 .aback:hover{color:var(--cream)}
@@ -153,7 +225,7 @@ main{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem;padding-bottom:calc(9
 .asub{font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.5}
 .fg{margin-bottom:1.1rem}
 .fg label{display:block;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:.35rem}
-.fc{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:3px;padding:11px 12px;color:var(--cream);font-family:'Karla',sans-serif;font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fc{width:100%;background:var(--admin-input-bg);border:1px solid var(--border);border-radius:3px;padding:11px 12px;color:var(--cream);font-family:'Karla',sans-serif;font-size:15px;outline:none;transition:border-color .2s,background .3s;-webkit-appearance:none}
 .fc:focus{border-color:var(--accent)}
 .fc::placeholder{color:var(--muted)}
 textarea.fc{resize:vertical;min-height:70px}
@@ -173,7 +245,7 @@ textarea.fc{resize:vertical;min-height:70px}
 .btng:hover{border-color:var(--muted);color:var(--cream)}
 .mgsec{margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--border)}
 .mgsec h3{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem}
-.mgitem{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mgitem{display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid var(--admin-sep)}
 .mgth{width:50px;height:34px;object-fit:cover;border-radius:2px;flex-shrink:0;border:1px solid var(--border)}
 .mgthph{width:50px;height:34px;background:var(--bg);border-radius:2px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mginf{flex:1;min-width:0}
@@ -189,7 +261,7 @@ textarea.fc{resize:vertical;min-height:70px}
 .hint{margin-top:1rem;font-size:11px;color:var(--muted)}
 
 /* ── PWA BANNER ── */
-#pbar{display:none;position:fixed;top:0;left:0;right:0;background:#1A130A;border-bottom:1px solid var(--border);padding:9px 14px;z-index:300;align-items:center;gap:10px}
+#pbar{display:none;position:fixed;top:0;left:0;right:0;background:var(--pwa-bg);border-bottom:1px solid var(--border);padding:9px 14px;z-index:300;align-items:center;gap:10px;transition:background .3s}
 #pbar.on{display:flex}
 .pico{width:38px;height:38px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;color:#0C0906;font-size:10px;letter-spacing:1px;flex-shrink:0}
 .ptxt{flex:1;min-width:0}
@@ -225,11 +297,25 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
 
 <!-- HEADER -->
 <header>
+  <!-- Corner ornaments -->
+  <svg class="corner-tl" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 2 L14 2 L14 4 L4 4 L4 14 L2 14 Z" fill="#D4A83C"/>
+    <circle cx="20" cy="20" r="3" stroke="#D4A83C" stroke-width="1" opacity="0.5"/>
+    <path d="M20 14 L20 10 M20 26 L20 30 M14 20 L10 20 M26 20 L30 20" stroke="#D4A83C" stroke-width="1" opacity="0.35"/>
+  </svg>
+  <svg class="corner-tr" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 2 L14 2 L14 4 L4 4 L4 14 L2 14 Z" fill="#D4A83C"/>
+    <circle cx="20" cy="20" r="3" stroke="#D4A83C" stroke-width="1" opacity="0.5"/>
+    <path d="M20 14 L20 10 M20 26 L20 30 M14 20 L10 20 M26 20 L30 20" stroke="#D4A83C" stroke-width="1" opacity="0.35"/>
+  </svg>
   <div class="htop">
     <div class="logo">
-      <div class="eyebrow">IES Mayorazgo · La Orotava, Tenerife</div>
+      <div class="eyebrow">IES Mayorazgo · La Orotava</div>
       <h1 class="sname">Radio <em>Sintonízate</em></h1>
-      <div class="stag">La Radio del IES Mayorazgo</div>
+      <div class="school-badge">
+        <div class="school-badge-dot"></div>
+        La Radio del IES Mayorazgo
+      </div>
     </div>
     <div class="hright">
       <button id="theme-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
@@ -280,6 +366,10 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
       Instagram
     </a>
+    <button class="flink" onclick="generateRSS()" style="background:none;cursor:pointer;border:1px solid var(--border);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+      Feed RSS / Podcast
+    </button>
   </div>
   <div class="footer-contact">
     Contacta con nosotros en <a href="/cdn-cgi/l/email-protection#2a19121a1b1a131d136a4d4548434f5844454e4f494b444b58434b590445584d"><span class="__cf_email__" data-cfemail="dae9e2eaebeae3ede39abdb5b8b3bfa8b4b5bebfb9bbb4bba8b3bba9f4b5a8bd">[email&#160;protected]</span></a>
@@ -395,6 +485,7 @@ footer{max-width:1200px;margin:0 auto;padding:2rem 1.25rem;border-top:1px solid 
 // ════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://vyjftrivoolvmfkopogh.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_M2YTp-QgFneXMafEi3lT6w_8iHXG8sH'
+
 // ════════════════════════════════════════════════
 //  SUPABASE CLIENT
 // ════════════════════════════════════════════════
@@ -440,6 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupPWA()
   loadSiteDesc()
   await loadEps()
+  checkDeepLink()
   subscribeRealtime()
 })
 
@@ -542,9 +634,14 @@ function renderGrid() {
         ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
         <div class="cfoot">
           <span class="cdate">${fmtDate(ep.date)}</span>
-          <button class="playbtn" onclick="event.stopPropagation();playEp('${ep.id}')" aria-label="Reproducir">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0C0906"><polygon points="5,3 19,12 5,21"/></svg>
-          </button>
+          <div class="cbtns">
+            <button class="sharebtn" onclick="event.stopPropagation();shareEp('${ep.id}')" aria-label="Compartir">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </button>
+            <button class="playbtn" onclick="event.stopPropagation();playEp('${ep.id}')" aria-label="Reproducir">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#0C0906"><polygon points="5,3 19,12 5,21"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>`
@@ -867,7 +964,89 @@ function buildWave() {
   })
 }
 
-// ── THEME ──
+// ── SHARE ──
+async function shareEp(id) {
+  const ep = eps.find(e => e.id === id); if (!ep) return
+  const url = `${location.origin}${location.pathname}?ep=${id}`
+  const text = `🎙️ "${ep.title}" — Radio Sintonízate, IES Mayorazgo`
+
+  if (navigator.share) {
+    try { await navigator.share({ title: ep.title, text, url }); return } catch {}
+  }
+  // Fallback: copy to clipboard + offer WhatsApp
+  try { await navigator.clipboard.writeText(url) } catch {}
+  const wa = `https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`
+  // Show mini share toast with WhatsApp option
+  const t = document.getElementById('toast')
+  t.innerHTML = `Enlace copiado · <a href="${wa}" target="_blank" rel="noopener" style="color:#0C0906;font-weight:700;text-decoration:underline">Abrir en WhatsApp</a>`
+  t.classList.add('on')
+  setTimeout(() => { t.classList.remove('on'); t.innerHTML = '' }, 4000)
+}
+
+// Deep-link: auto-play episode from ?ep= URL param
+function checkDeepLink() {
+  const params = new URLSearchParams(location.search)
+  const epId = params.get('ep')
+  if (!epId) return
+  // Wait briefly for eps to load then play
+  const attempt = () => {
+    const ep = eps.find(e => e.id === epId)
+    if (ep) { playEp(epId); return }
+    setTimeout(attempt, 400)
+  }
+  attempt()
+}
+
+// ── RSS ──
+function generateRSS() {
+  const siteUrl = 'https://radiosintonizate.com'
+  const items = eps.map(ep => {
+    const cv = ep.cover_path ? `<itunes:image href="${coverUrl(ep.cover_path)}"/>` : ''
+    const audioSrc = audioUrl(ep.audio_path)
+    return `
+    <item>
+      <title><![CDATA[${ep.title}]]></title>
+      <description><![CDATA[${ep.description || ep.title}]]></description>
+      <itunes:summary><![CDATA[${ep.description || ep.title}]]></itunes:summary>
+      <itunes:author>Radio Sintonízate — IES Mayorazgo</itunes:author>
+      ${cv}
+      <enclosure url="${audioSrc}" type="audio/mpeg" length="0"/>
+      <guid isPermaLink="false">${ep.id}</guid>
+      <pubDate>${ep.date ? new Date(ep.date + 'T12:00:00').toUTCString() : new Date().toUTCString()}</pubDate>
+      <itunes:episode>${eps.indexOf(ep) + 1}</itunes:episode>
+      ${ep.program ? `<itunes:keywords>${ep.program}</itunes:keywords>` : ''}
+    </item>`
+  }).join('')
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Radio Sintonízate</title>
+    <link>${siteUrl}</link>
+    <description>La radio oficial del IES Mayorazgo, La Orotava, Tenerife.</description>
+    <language>es</language>
+    <itunes:author>IES Mayorazgo</itunes:author>
+    <itunes:subtitle>La Radio del IES Mayorazgo</itunes:subtitle>
+    <itunes:summary>Programas, podcasts y emisiones del IES Mayorazgo, La Orotava, Tenerife.</itunes:summary>
+    <itunes:owner>
+      <itunes:name>IES Mayorazgo</itunes:name>
+      <itunes:email>38010979@gobiernodecanarias.org</itunes:email>
+    </itunes:owner>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Education"/>
+    ${items}
+  </channel>
+</rss>`
+
+  const blob = new Blob([xml], { type: 'application/rss+xml' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'radio-sintonizate-feed.xml'
+  a.click()
+  toast('Feed RSS descargado. Súbelo a tu servidor para usarlo con Spotify/Apple Podcasts.')
+}
 function applyTheme(light) {
   document.body.classList.toggle('light', light)
   document.getElementById('theme-icon').textContent = light ? '🌙' : '☀️'
