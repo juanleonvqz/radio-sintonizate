@@ -1,39 +1,66 @@
 export function setupPWA() {
-  // Generate app icon via canvas
-  function icon(s: number): string {
-    const c = document.createElement('canvas')
-    c.width = c.height = s
-    const x = c.getContext('2d')!
-    x.fillStyle = '#0C0906'; x.fillRect(0, 0, s, s)
-    x.fillStyle = '#E8A020'
-    x.font = `bold ${Math.round(s * .35)}px sans-serif`
-    x.textAlign = 'center'; x.textBaseline = 'middle'
-    x.fillText('RS', s / 2, s / 2)
-    return c.toDataURL('image/png')
+  // Use the actual Radio Sintonízate logo for the PWA icon
+  // It lives in public/logos/ so we can reference it by URL
+  const logoUrl = '/logos/Logo_radio_DEGRADADOS.jpg'
+
+  // For manifest icons we need base64 — load the image and convert via canvas
+  function logoToDataUrl(size: number): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const c = document.createElement('canvas')
+        c.width = c.height = size
+        const ctx = c.getContext('2d')!
+        // Dark background first
+        ctx.fillStyle = '#0C0906'
+        ctx.fillRect(0, 0, size, size)
+        // Draw logo centered, keeping aspect ratio
+        const scale = Math.min(size / img.width, size / img.height)
+        const w = img.width  * scale
+        const h = img.height * scale
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h)
+        resolve(c.toDataURL('image/png'))
+      }
+      img.onerror = () => {
+        // Fallback: text icon if image fails to load
+        const c = document.createElement('canvas')
+        c.width = c.height = size
+        const ctx = c.getContext('2d')!
+        ctx.fillStyle = '#0C0906'; ctx.fillRect(0, 0, size, size)
+        ctx.fillStyle = '#E8A020'
+        ctx.font = `bold ${Math.round(size * .35)}px sans-serif`
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+        ctx.fillText('RS', size / 2, size / 2)
+        resolve(c.toDataURL('image/png'))
+      }
+      img.src = logoUrl + '?v=' + Date.now()  // cache-bust
+    })
   }
 
-  const mf = {
-    name: 'Radio Sintonízate',
-    short_name: 'Radio Sintonízate',
-    description: 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife.',
-    start_url: './',
-    display: 'standalone',
-    background_color: '#0C0906',
-    theme_color: '#0C0906',
-    orientation: 'portrait-primary',
-    icons: [
-      { src: icon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-      { src: icon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
-    ],
-  }
-
-  const manifestEl = document.getElementById('pwa-manifest') as HTMLLinkElement | null
-  const appleEl    = document.getElementById('apple-icon')   as HTMLLinkElement | null
-  if (manifestEl) manifestEl.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/json' }))
-  if (appleEl)    appleEl.href    = icon(180)
+  Promise.all([logoToDataUrl(192), logoToDataUrl(512), logoToDataUrl(180)]).then(([i192, i512, i180]) => {
+    const mf = {
+      name: 'Radio Sintonízate',
+      short_name: 'Radio Sintonízate',
+      description: 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife.',
+      start_url: './',
+      display: 'standalone',
+      background_color: '#0C0906',
+      theme_color: '#0C0906',
+      orientation: 'portrait-primary',
+      icons: [
+        { src: i192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+    }
+    const manifestEl = document.getElementById('pwa-manifest') as HTMLLinkElement | null
+    const appleEl    = document.getElementById('apple-icon')   as HTMLLinkElement | null
+    if (manifestEl) manifestEl.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/json' }))
+    if (appleEl)    appleEl.href    = i180
+  })
 
   if ('serviceWorker' in navigator) {
-    const sw = `const C='rs-v1';
+    const sw = `const C='rs-v2';
 self.addEventListener('install',e=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim()});
 self.addEventListener('fetch',e=>{if(e.request.url.includes('supabase'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`
