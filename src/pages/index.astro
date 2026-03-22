@@ -1,0 +1,42 @@
+---
+import Base              from '../layouts/Base.astro'
+import Header            from '../components/Header.astro'
+import DescriptionBanner from '../components/DescriptionBanner.astro'
+import Player            from '../components/Player.astro'
+import AdminPanel        from '../components/AdminPanel.astro'
+import Footer            from '../components/Footer.astro'
+import '../styles/global.css'
+---
+
+<Base>
+
+  <Header />
+  <DescriptionBanner />
+
+  <main>
+    <div class="mh">
+      <h2 class="mtitle">Episodios</h2>
+      <span class="ecount" id="ecount"></span>
+    </div>
+
+    <!-- Episodes are rendered client-side by src/scripts/grid.ts -->
+    <div class="grid" id="grid">
+      <div class="state-box">
+        <div class="state-ico"><div class="spinner"></div></div>
+        <h3>Cargando episodios…</h3>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <Player />
+  <AdminPanel />
+  <div id="toast"></div>
+
+  <!-- Single entry point — Astro bundles and tree-shakes everything -->
+  <script>
+    import '../scripts/app'
+  </script>
+
+</Base>

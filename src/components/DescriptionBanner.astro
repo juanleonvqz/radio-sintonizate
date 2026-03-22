@@ -1,0 +1,18 @@
+---
+// Default text — overridden at runtime by admin via localStorage
+const defaultText = 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife. Aquí encontrarás todos nuestros programas, podcasts y emisiones. ¡Sintonízanos y forma parte de nuestra comunidad!'
+---
+
+<div class="desc-banner">
+  <div class="desc-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.8">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M6.343 6.343a8 8 0 1 0 11.314 0"/>
+      <path d="M9.172 9.172a4 4 0 1 0 5.656 0"/>
+    </svg>
+  </div>
+  <div class="desc-text">
+    <div class="desc-title">Bienvenidos a Radio Sintonízate</div>
+    <div class="desc-body" id="desc-body">{defaultText}</div>
+  </div>
+</div>

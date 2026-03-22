@@ -1,0 +1,84 @@
+---
+// Sticky bottom audio player — state managed by src/scripts/player.ts
+---
+
+<div id="player">
+  <div class="pinner">
+
+    <!-- Thumbnail -->
+    <div>
+      <div class="pth-ph" id="pth-ph">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M6.343 6.343a8 8 0 1 0 11.314 0"/>
+        </svg>
+      </div>
+      <img class="pth" id="pth" src="" alt="" style="display:none" />
+    </div>
+
+    <!-- Info + mini progress -->
+    <div class="pinfo" id="pinfo">
+      <div class="pprog-lbl" id="p-prog">Radio Sintonízate</div>
+      <div class="ptrow">
+        <div class="ptitle" id="p-title">—</div>
+        <div class="mwave" id="mwave">
+          <span style="height:5px"></span>
+          <span style="height:9px"></span>
+          <span style="height:7px"></span>
+          <span style="height:11px"></span>
+        </div>
+      </div>
+      <div class="pmini" id="pmini">
+        <div id="pfill"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="pctrls">
+      <button class="ctrl" id="skip-back-btn" aria-label="−15 segundos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+        </svg>
+      </button>
+      <button id="ppbtn" aria-label="Reproducir / Pausar">
+        <svg id="ico-play"  width="17" height="17" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg id="ico-pause" width="17" height="17" viewBox="0 0 24 24" fill="white" style="display:none">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+      </button>
+      <button class="ctrl" id="skip-fwd-btn" aria-label="+15 segundos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-.49-3.51"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Desktop extras: time + volume -->
+    <div class="pextra">
+      <span class="tlbl">
+        <span id="tcur">0:00</span> / <span id="ttot">0:00</span>
+      </span>
+      <div class="volrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C7D62" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <input id="vol-range" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volumen" />
+      </div>
+    </div>
+
+    <!-- Close -->
+    <button class="closebtn" id="close-player-btn" aria-label="Cerrar reproductor">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+  </div>
+</div>
+
+<audio id="aud"></audio>

@@ -1,0 +1,49 @@
+---
+// Header is purely presentational — all interactivity wired in app.ts
+---
+
+<!-- PWA install banner -->
+<div id="pbar">
+  <div class="pico">RS</div>
+  <div class="ptxt">
+    <strong>Radio Sintonízate</strong>
+    <span>Instalar como app</span>
+  </div>
+  <button class="pinst" id="pwa-install-btn">Instalar</button>
+  <button class="pdis" id="pwa-dismiss-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+</div>
+
+<header>
+  <div class="htop">
+    <div class="logo">
+      <img
+        id="logo-img"
+        class="logo-img"
+        src="/logos/Logo_radio_DEGRADADOS.jpg"
+        alt="Radio Sintonízate"
+      />
+      <div class="logo-text">
+        <div class="eyebrow">IES El Mayorazgo · La Orotava</div>
+        <h1 class="sname">Radio <em>Sintonízate</em></h1>
+        <div class="school-badge">
+          <div class="school-badge-dot"></div>
+          La Radio del IES El Mayorazgo
+        </div>
+      </div>
+    </div>
+    <div class="hright">
+      <button id="theme-btn" aria-label="Cambiar tema">
+        <span class="theme-icon" id="theme-icon">☀️</span>
+        <span id="theme-lbl">Claro</span>
+      </button>
+      <div class="wave" id="wave-el"></div>
+    </div>
+  </div>
+  <nav id="main-nav">
+    <button class="nl on" data-filter="all">Todos</button>
+  </nav>
+</header>

@@ -1,0 +1,114 @@
+---
+// Admin overlay — auth + episode upload + site description editor
+// Logic lives in src/scripts/admin.ts
+---
+
+<!-- Admin FAB -->
+<button id="fab" aria-label="Administración">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+</button>
+
+<!-- Overlay -->
+<div id="aov">
+  <div class="abox">
+
+    <button class="aback" id="admin-back-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Volver
+    </button>
+
+    <!-- ── LOGIN ── -->
+    <div id="lpanel">
+      <div class="atitle" style="color:var(--cream)">Acceso Admin</div>
+      <div class="asub">Inicia sesión con tu cuenta de administrador.</div>
+
+      <div class="fg">
+        <label>Email</label>
+        <input class="fc" type="email" id="email-inp" placeholder="admin@radiosintonizate.com" autocomplete="email" />
+      </div>
+      <div class="fg">
+        <label>Contraseña</label>
+        <input class="fc" type="password" id="pw-inp" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="err" id="pwerr">Email o contraseña incorrectos.</div>
+      <button class="btnp" id="login-btn">Entrar</button>
+      <p class="hint">Crea usuarios en Supabase Dashboard → Authentication → Users</p>
+    </div>
+
+    <!-- ── UPLOAD PANEL ── -->
+    <div id="upanel" style="display:none">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;flex-wrap:wrap;gap:.5rem">
+        <div class="atitle">Nuevo episodio</div>
+        <button class="btndel" id="signout-btn" style="border-color:rgba(140,125,98,.3);color:var(--muted)">
+          Cerrar sesión
+        </button>
+      </div>
+      <div class="asub">Rellena los datos y sube el audio.</div>
+
+      <div class="fg">
+        <label>Nombre del programa</label>
+        <input class="fc" type="text" id="f-prog" placeholder="Noticias, Cuñas, Deportes…" autocomplete="off" />
+      </div>
+      <div class="fg">
+        <label>Título del episodio *</label>
+        <input class="fc" type="text" id="f-ttl" placeholder="Episodio 3 — La Orotava" autocomplete="off" />
+      </div>
+      <div class="fg">
+        <label>Descripción</label>
+        <textarea class="fc" id="f-desc" rows="3" placeholder="De qué trata este episodio…"></textarea>
+      </div>
+      <div class="fg">
+        <label>Fecha de emisión</label>
+        <input class="fc" type="date" id="f-date" />
+      </div>
+
+      <!-- Cover photo -->
+      <div class="fg">
+        <label>Foto de portada</label>
+        <div class="dz" id="cv-dz">
+          <input type="file" accept="image/*" id="cv-inp" />
+          <div class="dz-ico">🖼️</div>
+          <div class="dz-txt">Arrastra la foto o <strong>toca aquí</strong></div>
+          <div class="dz-fn" id="cv-fn"></div>
+        </div>
+        <div id="cvwrap"><img id="cvimg" src="" alt="portada" /></div>
+      </div>
+
+      <!-- Audio file -->
+      <div class="fg">
+        <label>Archivo de audio *</label>
+        <div class="dz" id="au-dz">
+          <input type="file" accept="audio/*" id="au-inp" />
+          <div class="dz-ico">🎙️</div>
+          <div class="dz-txt">Arrastra el audio o <strong>toca aquí</strong></div>
+          <div class="dz-fn" id="au-fn"></div>
+        </div>
+      </div>
+
+      <button class="btnp" id="pub-btn">Publicar episodio</button>
+
+      <!-- Manage existing episodes -->
+      <div class="mgsec" id="mgsec" style="display:none">
+        <h3 id="mgh">Episodios publicados</h3>
+        <div id="mglist"></div>
+      </div>
+
+      <!-- Site description editor -->
+      <div class="mgsec">
+        <h3>Descripción del sitio</h3>
+        <div class="fg" style="margin-bottom:.75rem">
+          <label>Texto de bienvenida</label>
+          <textarea class="fc" id="site-desc" rows="4" placeholder="Escribe aquí la descripción pública de la radio…"></textarea>
+        </div>
+        <button class="btnp" id="save-desc-btn">Guardar descripción</button>
+      </div>
+
+    </div><!-- /upanel -->
+  </div><!-- /abox -->
+</div><!-- /aov -->
