@@ -873,14 +873,15 @@ body.light .footer-school-logo { filter: none; }
   border: 1px solid var(--border);
   border-radius: 8px; padding: 3px;
   margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 .admin-tab {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px 6px;
+  padding: 8px 4px;
   background: none; border: none; border-radius: 6px;
   font-family: 'Karla', sans-serif; font-size: 11px; letter-spacing: .5px;
   color: var(--muted); cursor: pointer; transition: all .2s;
-  white-space: nowrap;
+  white-space: nowrap; min-width: 0;
 }
 .admin-tab:hover { color: var(--cream); }
 .admin-tab.on {
@@ -888,6 +889,12 @@ body.light .footer-school-logo { filter: none; }
   font-weight: 700;
 }
 .admin-tab svg { flex-shrink: 0; }
+.admin-tab-label { overflow: hidden; }
+@media (max-width: 480px) {
+  .admin-tab { padding: 8px 6px; gap: 0; }
+  .admin-tab-label { display: none; }
+  .admin-tab { font-size: 0; }
+}
 .admin-tab-content { display: none; }
 .admin-tab-content.on { display: block; }
 .admin-ep-empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 13px; }
