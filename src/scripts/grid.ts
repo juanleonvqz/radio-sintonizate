@@ -81,9 +81,18 @@ function renderGrid() {
 
   if (!filtered.length) {
     grid.innerHTML = `<div class="state-box">
-      <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>
-      <h3>${searchQ ? 'Sin resultados' : eps.length ? 'Sin episodios aquí' : 'Aún no hay episodios'}</h3>
-      <p>${searchQ ? `No hay episodios que coincidan con "<strong>${searchQ}</strong>".` : eps.length ? 'Prueba con otro programa.' : 'El equipo publicará el primer episodio pronto.'}</p>
+      <div class="state-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/>
+        </svg>
+      </div>
+      <h3>${searchQ ? 'Sin resultados' : eps.length ? 'Sin episodios aquí' : '¡Próximamente!'}</h3>
+      <p>${searchQ
+        ? `No hay episodios que coincidan con "<strong>${searchQ}</strong>". Prueba con otro término.`
+        : eps.length
+          ? 'No hay episodios en este programa todavía.'
+          : 'El equipo de Radio Sintonízate está preparando los primeros episodios. ¡Vuelve pronto!'
+      }</p>
     </div>`
     return
   }
@@ -94,28 +103,35 @@ function renderGrid() {
     return b.date.localeCompare(a.date)
   })
 
-  grid.innerHTML = `<div class="episodes-flat">${sorted.map(ep => {
+  // Featured only when not searching and not filtered
+  const showFeatured = !searchQ && activeF === 'all'
+  const [featured, ...rest] = showFeatured ? sorted : [null, ...sorted]
+
+  const makeCard = (ep: Episode, isFeatured = false) => {
     const cv       = coverUrl(ep.cover_path)
     const isPlaying = ep.id === curId && playing
     const isPaused  = ep.id === curId && !playing && !!curId
 
-    return `<div class="card ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''}" id="card-${ep.id}" data-id="${ep.id}">
+    return `<div class="card ${isFeatured ? 'card-featured' : ''} ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''}" id="card-${ep.id}" data-id="${ep.id}">
       <div class="cimg-wrap">
         ${cv
-          ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="lazy">`
+          ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="${isFeatured ? 'eager' : 'lazy'}">`
           : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
         <div class="now-playing-overlay" style="display:${isPlaying ? 'flex' : 'none'}">
-          <div class="np-bars">
-            <span></span><span></span><span></span><span></span>
-          </div>
+          <div class="np-bars"><span></span><span></span><span></span><span></span></div>
           <span class="np-lbl">Reproduciendo</span>
         </div>
+        ${isFeatured ? `<div class="featured-badge">Último episodio</div>` : ''}
       </div>
       <div class="cbody">
         ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
         <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
         <div class="ctitle">${ep.title}</div>
         ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
+        <div class="ctap-hint">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Toca para ver más
+        </div>
         <div class="cfoot">
           <span class="cdate">${fmtDate(ep.date)}</span>
           <span class="cdur" id="dur-${ep.id}"></span>
@@ -131,7 +147,12 @@ function renderGrid() {
         </div>
       </div>
     </div>`
-  }).join('')}</div>`
+  }
+
+  grid.innerHTML = `<div class="episodes-flat">
+    ${featured ? makeCard(featured, true) : ''}
+    ${rest.length ? `<div class="episodes-rest">${rest.map(ep => makeCard(ep)).join('')}</div>` : ''}
+  </div>`
 
   // Wire click handlers
   grid.querySelectorAll<HTMLElement>('[data-id]').forEach(card => {

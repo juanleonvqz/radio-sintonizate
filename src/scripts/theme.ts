@@ -4,8 +4,8 @@ export function applyTheme(light: boolean) {
   const lbl  = document.getElementById('theme-lbl')
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
 
-  if (icon) icon.textContent = light ? '🌙' : '☀️'
-  if (lbl)  lbl.textContent  = light ? 'Oscuro' : 'Claro'
+  if (icon) icon.textContent = light ? '☀️' : '🌙'
+  if (lbl)  lbl.textContent  = light ? 'Modo oscuro' : 'Modo claro'
   if (meta) meta.content     = light ? '#F5F0E8' : '#0C0906'
 
   // Light mode (default) → _White, Dark mode → _Black

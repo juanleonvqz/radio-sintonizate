@@ -122,9 +122,10 @@ header::after {
   padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px;
   font-size: 11px; color: rgba(245,166,35,.8); font-family: 'Karla', sans-serif;
   transition: all .2s; white-space: nowrap; flex-shrink: 0;
+  min-width: 110px; justify-content: center; /* fixed width prevents layout shift */
 }
 #theme-btn:hover { border-color: var(--logo-gold); color: var(--logo-gold); }
-.theme-icon { font-size: 13px; }
+.theme-icon { font-size: 13px; flex-shrink: 0; }
 
 /* Waveform */
 .wave   { display: flex; align-items: center; gap: 3px; height: 32px; }
@@ -138,23 +139,31 @@ body.audio-playing .wbar { opacity: .6; animation: wanim 1.2s ease-in-out infini
 
 /* Nav */
 nav {
-  max-width: 1200px; margin: 0 auto; padding: 0 1.25rem;
+  max-width: 1200px; margin: 0 auto; padding: .6rem 1.25rem;
   border-top: 1px solid rgba(124, 63, 160, .2);
   display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   position: relative; z-index: 1; background: rgba(9, 21, 32, .5);
+  gap: .4rem;
 }
 nav::-webkit-scrollbar { display: none; }
 .nl {
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  /* Bumped opacity for readability */
-  color: rgba(245, 166, 35, .75);
-  padding: .8rem .9rem .7rem;
-  border-bottom: 2px solid transparent; border-top: none; border-left: none; border-right: none;
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  padding: .45rem .9rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
   background: none; cursor: pointer; font-family: 'Karla', sans-serif;
-  white-space: nowrap; flex-shrink: 0; transition: color .2s, border-color .2s;
+  white-space: nowrap; flex-shrink: 0;
+  transition: color .2s, border-color .2s, background .2s;
+  font-weight: 500;
 }
-.nl:first-child { padding-left: 0; }
-.nl.on { color: var(--logo-gold); border-bottom-color: var(--logo-gold); }
+.nl:hover { color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.25); }
+.nl.on {
+  color: #0C0906;
+  background: var(--logo-gold);
+  border-color: var(--logo-gold);
+  font-weight: 700;
+}
 
 /* ── DESCRIPTION BANNER ── */
 .desc-banner {
@@ -172,7 +181,9 @@ nav::-webkit-scrollbar { display: none; }
 .desc-body  { font-size: 14px; color: var(--muted); line-height: 1.65; white-space: pre-line; }
 
 /* ── MAIN ── */
-main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; padding-bottom: calc(90px + var(--sb) + 4rem); }
+main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 1.5rem; }
+/* When player is open, add enough bottom padding to clear it */
+body.player-open main { padding-bottom: calc(80px + var(--sb) + 1rem); }
 .mh     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: .5rem; flex-wrap: wrap; }
 .mtitle { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; letter-spacing: 2px; flex-shrink: 0; }
 .mh-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; min-width: 0; }
@@ -180,14 +191,11 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; padding-botto
 
 /* ── EPISODE GRID ── */
 .grid { display: block; }
-.episodes-flat {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  gap: .9rem;
-}
+.episodes-flat { display: flex; flex-direction: column; gap: .75rem; }
+.episodes-rest  { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
 
 /* Month badge on card */
-.cmonth { margin-bottom: .35rem; }
+.cmonth { margin-bottom: .3rem; }
 .cmonth-badge {
   display: inline-block;
   font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
@@ -197,71 +205,92 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; padding-botto
   font-weight: 600;
 }
 
-/* ── EPISODE CARD ── */
+/* ── EPISODE CARD — horizontal row ── */
 .card {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
-  overflow: hidden; cursor: pointer; display: flex; flex-direction: column;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: row; /* horizontal */
   -webkit-user-select: none; user-select: none;
   transition: border-color .2s, background .2s, box-shadow .2s, transform .2s;
+  min-height: 90px;
 }
 @media (hover: hover) {
   .card:hover {
     background: var(--bg-card-h); border-color: var(--border-s);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    transform: translateX(3px);
+    box-shadow: 4px 0 0 0 var(--border-s);
   }
 }
 .card:active  { background: var(--bg-card-h); }
-.card.playing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card.playing { border-color: var(--accent); box-shadow: 3px 0 0 0 var(--accent); }
 .card.paused  { border-color: var(--border-s); }
-/* Remove old playing text — handled by icon now */
-.ccover { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
-.cph    { width: 100%; aspect-ratio: 16/9; background: #1A120A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.cbody  { padding: .85rem; flex: 1; display: flex; flex-direction: column; }
-/* Program label — warmer gold, easier to read */
+
+/* Image — rectangular thumbnail, portrait-friendly */
+.cimg-wrap {
+  position: relative; flex-shrink: 0;
+  width: 110px;
+  align-self: stretch;
+  overflow: hidden;
+}
+.ccover {
+  width: 110px; height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  position: absolute; top: 0; left: 0;
+}
+.cph {
+  width: 110px; height: 100%;
+  background: #1A120A; display: flex; align-items: center; justify-content: center;
+  position: absolute; top: 0; left: 0;
+}
+
+/* Body — takes remaining width */
+.cbody {
+  padding: .7rem .85rem; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; justify-content: center;
+}
+/* Program label — better contrast in both modes */
 .cprog  {
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--logo-gold); opacity: .9;
-  margin-bottom: .3rem;
+  color: var(--muted);
+  display: inline-block; /* never stretches full width */
+  margin-bottom: .25rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
 }
-/* Title — larger, better contrast */
 .ctitle {
   font-family: 'Playfair Display', serif;
-  font-size: 1rem; line-height: 1.4;
-  color: var(--cream);
-  margin-bottom: .4rem;
+  font-size: .95rem; line-height: 1.35; color: var(--cream);
+  margin-bottom: .15rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cdesc {
-  font-size: 13px; color: var(--muted); line-height: 1.65;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden; flex: 1;
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
 }
-.cfoot  { display: flex; align-items: center; justify-content: space-between; margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--admin-sep); }
-.cdate  { font-size: 11px; color: var(--muted); }
-/* Duration badge — loads async after cards render */
+.cfoot  { display: flex; align-items: center; gap: .4rem; margin-top: .4rem; }
+.cdate  { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+/* Tap hint hidden on rows — show only on featured */
+.ctap-hint { display: none; align-items: center; gap: 3px; font-size: 10px; letter-spacing: 1px; color: var(--muted); opacity: .5; }
+.ctap-hint svg { flex-shrink: 0; }
 .cdur {
-  display: none;
-  font-size: 10px; color: var(--muted);
-  background: rgba(255,255,255,.06);
-  padding: 1px 6px; border-radius: 10px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .3px;
-  margin-left: auto; margin-right: .25rem;
+  display: none; font-size: 10px; color: var(--muted);
+  background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 10px;
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
 }
-.cbtns  { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.cbtns  { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
 .playbtn {
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: var(--accent); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: background .2s, transform .15s;
 }
 .playbtn:hover   { background: var(--accent-l); }
 .playbtn:active  { transform: scale(.9); }
-/* Center pause icon (no margin-left) */
-.playbtn svg { margin-left: 0; }
-.playbtn .card-play-ico  { margin-left: 2px; }
+.playbtn .card-play-ico { margin-left: 2px; }
 .sharebtn {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   background: transparent; border: 1px solid var(--border);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; color: var(--muted); transition: all .2s;
@@ -418,9 +447,12 @@ footer::before {
 }
 .footer-inner {
   max-width: 1200px; margin: 0 auto;
-  padding: 2.5rem 1.25rem 2.5rem;
-  display: flex; flex-direction: column; gap: 1.75rem;
+  padding: 1.75rem 1.25rem 2rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
   position: relative; z-index: 1;
+}
+@media (max-width: 480px) {
+  .footer-inner { padding: 1.25rem 1rem 1.5rem; gap: 1rem; }
 }
 
 /* Logos row */
@@ -492,31 +524,20 @@ body.light .school-logo-img {
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
 }
-@media (max-width: 640px) {
-  .footer-columns {
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-}
-@media (max-width: 380px) {
-  .footer-columns { grid-template-columns: 1fr; }
-}
+@media (max-width: 640px) { .footer-columns { grid-template-columns: 1fr 1fr; gap: 1.5rem; } }
+@media (max-width: 380px) { .footer-columns { grid-template-columns: 1fr; } }
+
 .footer-col-title {
   font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--logo-gold); font-weight: 600;
-  margin-bottom: .75rem;
+  color: var(--logo-gold); font-weight: 600; margin-bottom: .75rem;
 }
-.footer-col-body {
-  display: flex; flex-direction: column; gap: .55rem;
-}
+.footer-col-body { display: flex; flex-direction: column; gap: .55rem; }
 .footer-col-item {
   display: flex; align-items: flex-start; gap: 8px;
   font-size: 12px; color: rgba(180,200,220,.7); line-height: 1.55;
 }
 .footer-col-item svg { flex-shrink: 0; margin-top: 1px; opacity: .6; }
-.footer-col-item a {
-  color: rgba(180,200,220,.7); text-decoration: none; transition: color .2s;
-}
+.footer-col-item a { color: rgba(180,200,220,.7); text-decoration: none; transition: color .2s; }
 .footer-col-item a:hover { color: var(--logo-gold); }
 .footer-col-link {
   display: flex; align-items: center; gap: 8px;
@@ -525,24 +546,19 @@ body.light .school-logo-img {
 }
 .footer-col-link svg { flex-shrink: 0; opacity: .6; }
 .footer-col-link:hover { color: var(--logo-gold); }
-.footer-col-desc {
-  font-size: 12px; color: rgba(180,200,220,.6); line-height: 1.65;
-}
+.footer-col-desc { font-size: 12px; color: rgba(180,200,220,.6); line-height: 1.65; }
 
-/* Bottom row — centered on mobile */
-.footer-bottom {
+/* Copyright row */
+.footer-copy-row {
   display: flex; align-items: center; justify-content: space-between;
-  border-top: 1px solid rgba(255,255,255,.06);
-  padding-top: 1.25rem;
+  padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.06);
   flex-wrap: wrap; gap: .5rem;
 }
+.footer-copy-row span { font-size: 11px; color: rgba(160,180,200,.4); letter-spacing: .5px; }
 @media (max-width: 480px) {
-  .footer-bottom {
-    flex-direction: column; align-items: center;
-    text-align: center; gap: .75rem;
-  }
+  .footer-copy-row { flex-direction: column; align-items: center; text-align: center; }
 }
-.footer-copy { font-size: 11px; color: rgba(160,180,200,.4); letter-spacing: .5px; }
+
 
 /* ── TOAST ── */
 #toast    { position: fixed; bottom: calc(var(--sb) + 5.5rem); left: 50%; transform: translateX(-50%) translateY(12px); background: var(--accent); color: #0C0906; padding: 9px 20px; border-radius: 3px; font-size: 13px; font-weight: 600; opacity: 0; transition: all .3s; z-index: 400; pointer-events: none; white-space: nowrap; max-width: 88vw; text-align: center; }
@@ -727,7 +743,7 @@ body.light .school-logo-img {
   .modal-controls { gap: .5rem; }
   .modal-play-btn { width: 52px; height: 52px; }
   .modal-share-btn { padding: 9px 12px; font-size: 11px; }
-  main { padding: 1.25rem .9rem; padding-bottom: calc(90px + var(--sb) + 4rem); }
+  main { padding: 1.25rem .9rem 1.25rem; }
   .htop { padding: 1rem .9rem .75rem; }
   .footer-links { gap: .5rem; }
   .flink { padding: 6px 11px; font-size: 11px; }
@@ -883,15 +899,6 @@ body.light .footer-school-logo { filter: none; }
 /* ── NOW PLAYING OVERLAY on card cover ── */
 .cimg-wrap { position: relative; flex-shrink: 0; }
 .ccover, .cph { display: block; }
-.now-playing-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.55);
-  display: none; /* toggled by syncCardStates */
-  flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 6px;
-  border-radius: 0; /* matches card */
-}
 .np-bars {
   display: flex; align-items: flex-end; gap: 3px; height: 20px;
 }
@@ -951,3 +958,46 @@ body.light .footer-school-logo { filter: none; }
   40%  { transform: scale(1.25); }
   100% { transform: scale(1); }
 }
+
+/* ── FEATURED EPISODE CARD — vertical, full width ── */
+.card-featured {
+  flex-direction: column; /* override row layout */
+  border-color: rgba(124,63,160,.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+  min-height: unset;
+}
+.card-featured .cimg-wrap { width: 100%; height: auto; overflow: hidden; align-self: auto; }
+.card-featured .ccover    { width: 100%; height: auto; aspect-ratio: 16/7; object-position: center; position: static; }
+.card-featured .cph       { width: 100%; aspect-ratio: 16/7; height: auto; position: static; }
+.card-featured .cbody     { padding: .9rem; justify-content: flex-start; }
+.card-featured .ctitle    { font-size: 1.15rem; -webkit-line-clamp: 3; margin-bottom: .35rem; }
+.card-featured .cdesc     { -webkit-line-clamp: 2; margin-bottom: .5rem; }
+.card-featured .ctap-hint { display: flex; margin-top: .35rem; }
+.card-featured .cfoot     { margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--admin-sep); }
+.card-featured .playbtn   { width: 38px; height: 38px; }
+.card-featured .sharebtn  { width: 32px; height: 32px; }
+
+/* Now playing overlay — sized for row thumbnail */
+.now-playing-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.6);
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+}
+/* Featured overlay shows label, row overlay shows just bars */
+.card-featured .now-playing-overlay { gap: 6px; }
+
+.episodes-rest { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
+
+.featured-badge {
+  position: absolute; top: .6rem; left: .6rem;
+  background: var(--logo-purple);
+  color: white; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  font-family: 'Karla', sans-serif;
+}
+/* ── LOADING STATE in main grid ── */
+.state-box p strong { color: var(--accent); }
