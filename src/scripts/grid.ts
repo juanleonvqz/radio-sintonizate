@@ -369,6 +369,40 @@ export function openEpisodeModal(id: string) {
   document.body.style.overflow = 'hidden'
   startModalSync()
 
+  // ── Swipe down to close (mobile only) ────────────────────────────────────
+  const sheet = document.getElementById('ep-modal-sheet')!
+  let swipeStartY = 0
+  let swipeDelta  = 0
+  const onTouchStart = (e: TouchEvent) => {
+    // Only initiate swipe when at the top of the scroll area
+    if (sheet.scrollTop > 4) return
+    swipeStartY = e.touches[0].clientY
+    swipeDelta  = 0
+  }
+  const onTouchMove = (e: TouchEvent) => {
+    if (!swipeStartY) return
+    swipeDelta = e.touches[0].clientY - swipeStartY
+    if (swipeDelta > 0) {
+      sheet.style.transform = `translateY(${swipeDelta}px)`
+      sheet.style.transition = 'none'
+    }
+  }
+  const onTouchEnd = () => {
+    if (swipeDelta > 80) {
+      sheet.style.transition = 'transform .25s ease'
+      sheet.style.transform  = 'translateY(100%)'
+      setTimeout(closeEpisodeModal, 240)
+    } else {
+      sheet.style.transition = 'transform .3s cubic-bezier(.16,1,.3,1)'
+      sheet.style.transform  = ''
+      setTimeout(() => { sheet.style.transition = ''; sheet.style.transform = '' }, 300)
+    }
+    swipeStartY = 0; swipeDelta = 0
+  }
+  sheet.addEventListener('touchstart', onTouchStart, { passive: true })
+  sheet.addEventListener('touchmove',  onTouchMove,  { passive: true })
+  sheet.addEventListener('touchend',   onTouchEnd)
+
   // Load reactions
   loadReactions(ep.id)
   reactionUnsub?.()
@@ -433,6 +467,8 @@ export function openEpisodeModal(id: string) {
 }
 
 export function closeEpisodeModal() {
+  const sheet = document.getElementById('ep-modal-sheet')
+  if (sheet) { sheet.style.transform = ''; sheet.style.transition = '' }
   document.getElementById('ep-modal')?.classList.remove('on')
   document.body.style.overflow = ''
   currentModalId = null

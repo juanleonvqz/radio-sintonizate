@@ -145,7 +145,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Load episodes ─────────────────────────────────────────────────────────
   const grid = document.getElementById('grid')
   if (grid) {
-    grid.innerHTML = `<div class="state-box"><div class="state-ico"><div class="spinner"></div></div><h3>Cargando episodios…</h3></div>`
+    grid.innerHTML = `<div class="episodes-flat">
+      <div class="skeleton-featured"></div>
+      <div class="episodes-rest">
+        ${[1,2,3].map(() => `<div class="skeleton-card"></div>`).join('')}
+      </div>
+    </div>`
   }
 
   try {
