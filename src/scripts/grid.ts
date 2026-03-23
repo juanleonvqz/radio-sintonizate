@@ -487,7 +487,7 @@ async function loadComments(episodeId: string) {
     return
   }
   list.innerHTML = comments.map(c => {
-    const date = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    const date = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     return `<div class="comment-item">
       <div class="comment-meta">
         <span class="comment-author">${c.author}</span>
@@ -543,7 +543,7 @@ function fmtDate(d: string | null): string {
   if (!d) return ''
   try {
     return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric', month: 'short', year: 'numeric'
+      day: 'numeric', month: 'long', year: 'numeric'
     }).replace('.', '')
   }
   catch { return d }

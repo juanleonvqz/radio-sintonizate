@@ -395,7 +395,7 @@ export async function renderComments() {
 
   list.innerHTML = comments.map(c => {
     const ep    = (c as any).episodes
-    const date  = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    const date  = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     return `<div class="admin-comment-item" id="ac-${c.id}">
       <div class="admin-comment-meta">
         <span class="admin-comment-author">${c.author}</span>
