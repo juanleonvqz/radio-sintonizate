@@ -1,4 +1,4 @@
-import { coverUrl, audioUrl, getAudioDuration, getReactions, addReaction, subscribeToReactions, EMOJIS } from '../lib/supabase'
+import { coverUrl, audioUrl, getAudioDuration, getReactions, addReaction, subscribeToReactions, EMOJIS, getApprovedComments, submitComment, subscribeToComments } from '../lib/supabase'
 import type { ReactionCounts } from '../lib/supabase'
 import { eps, curId, playing, playEp, skip } from './player'
 import { shareEp } from './share'
@@ -8,6 +8,7 @@ let activeF   = 'all'
 let searchQ   = ''
 let currentModalId: string | null = null
 let reactionUnsub: (() => void) | null = null
+let commentUnsub:  (() => void) | null = null
 
 // ── Listened tracking ─────────────────────────────────────────────────────────
 function getListened(): Set<string> {
@@ -138,16 +139,13 @@ function renderGrid() {
           <span class="np-lbl">Reproduciendo</span>
         </div>
         ${isFeatured ? `<div class="featured-badge">Último episodio</div>` : ''}
-        ${isDone && !isFeatured ? `<div class="listened-badge">✓ Escuchado</div>` : ''}
       </div>
       <div class="cbody">
         ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
         <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
         <div class="ctitle">${ep.title}</div>
-        ${ep.description
-          ? `<div class="cdesc">${ep.description}</div>`
-          : ''}
-        <div class="cno-desc">Escuchar episodio →</div>
+        ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
+        ${!isDone ? `<div class="cno-desc">Escuchar episodio →</div>` : ''}
         <div class="ctap-hint">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Toca para ver más
@@ -187,6 +185,9 @@ function renderGrid() {
       e.stopPropagation()
       const id = btn.dataset.play!
       markListened(id)
+      // Hide "Escuchar episodio →" immediately on this card
+      const card = document.getElementById(`card-${id}`)
+      card?.querySelector<HTMLElement>('.cno-desc')?.remove()
       if (id === curId) {
         import('./player').then(m => m.togglePlay())
       } else {
@@ -260,9 +261,57 @@ export function openEpisodeModal(id: string) {
       <h2 class="modal-title">${ep.title}</h2>
       ${ep.description ? `<p class="modal-desc">${ep.description}</p>` : ''}
 
-      <!-- Reactions -->
-      <div class="modal-reactions" id="modal-reactions">
-        <div class="reactions-loading">cargando…</div>
+      <!-- Reactions + comment icon row -->
+      <div class="modal-reactions-row">
+        <div class="modal-reactions" id="modal-reactions">
+          <div class="reactions-loading">cargando…</div>
+        </div>
+        <button class="modal-comment-toggle" id="modal-comment-toggle" title="Dejar un comentario">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span id="comment-count-lbl"></span>
+        </button>
+      </div>
+
+      <!-- Comments section — hidden until icon clicked -->
+      <div class="modal-comments" id="modal-comments" style="display:none">
+        <div class="modal-comments-header">
+          <div class="modal-comments-title">Comentarios</div>
+          <div class="modal-comments-notice">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Los comentarios son revisados antes de publicarse
+          </div>
+        </div>
+        <div class="modal-comments-list" id="modal-comments-list"></div>
+
+        <!-- Collapsed: just a button to open form -->
+        <div id="comment-form-trigger">
+          <button class="comment-open-btn" id="comment-open-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Añadir comentario
+          </button>
+        </div>
+
+        <!-- Expanded form -->
+        <div class="modal-comment-form" id="modal-comment-form" style="display:none">
+          <input class="comment-author-inp" id="comment-author" type="text" placeholder="Tu nombre" maxlength="50" autocomplete="off" />
+          <textarea class="comment-body-inp" id="comment-body" placeholder="Escribe tu comentario…" maxlength="500" rows="3"></textarea>
+          <div class="comment-form-footer">
+            <span class="comment-approval-note">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Pendiente de aprobación
+            </span>
+            <div style="display:flex;gap:.5rem">
+              <button class="comment-cancel-btn" id="comment-cancel">Cancelar</button>
+              <button class="comment-submit-btn" id="comment-submit" data-ep="${ep.id}">Enviar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Success state -->
+        <div class="comment-sent" id="comment-sent" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          El comentario será revisado por el profesor/a antes de publicarse.
+        </div>
       </div>
 
       <!-- Built-in player -->
@@ -322,11 +371,65 @@ export function openEpisodeModal(id: string) {
 
   // Load reactions
   loadReactions(ep.id)
-
-  // Subscribe to live reaction updates
   reactionUnsub?.()
-  const ch = subscribeToReactions(ep.id, () => loadReactions(ep.id))
-  reactionUnsub = () => ch.unsubscribe()
+  const rch = subscribeToReactions(ep.id, () => loadReactions(ep.id))
+  reactionUnsub = () => rch.unsubscribe()
+
+  // Load comments
+  loadComments(ep.id)
+  commentUnsub?.()
+  const cch = subscribeToComments(ep.id, () => loadComments(ep.id))
+  commentUnsub = () => cch.unsubscribe()
+
+  // Comment icon — toggles section open/close
+  inner.querySelector<HTMLButtonElement>('#modal-comment-toggle')?.addEventListener('click', () => {
+    const sec = inner.querySelector<HTMLElement>('#modal-comments')
+    if (!sec) return
+    const isOpen = sec.style.display !== 'none'
+    sec.style.display = isOpen ? 'none' : 'block'
+    const btn = inner.querySelector<HTMLButtonElement>('#modal-comment-toggle')
+    if (btn) btn.classList.toggle('active', !isOpen)
+    if (!isOpen) {
+      loadComments(ep.id)
+      sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  })
+
+  // Open comment form
+  inner.querySelector<HTMLButtonElement>('#comment-open-btn')?.addEventListener('click', () => {
+    inner.querySelector<HTMLElement>('#comment-form-trigger')!.style.display = 'none'
+    inner.querySelector<HTMLElement>('#modal-comment-form')!.style.display   = 'flex'
+    inner.querySelector<HTMLInputElement>('#comment-author')?.focus()
+  })
+
+  // Cancel
+  inner.querySelector<HTMLButtonElement>('#comment-cancel')?.addEventListener('click', () => {
+    inner.querySelector<HTMLElement>('#modal-comment-form')!.style.display    = 'none'
+    inner.querySelector<HTMLElement>('#comment-form-trigger')!.style.display  = 'block'
+  })
+
+  // Submit
+  inner.querySelector<HTMLButtonElement>('#comment-submit')?.addEventListener('click', async () => {
+    const author = inner.querySelector<HTMLInputElement>('#comment-author')?.value.trim() ?? ''
+    const body   = inner.querySelector<HTMLTextAreaElement>('#comment-body')?.value.trim() ?? ''
+    const btn    = inner.querySelector<HTMLButtonElement>('#comment-submit')!
+    if (!author) { inner.querySelector<HTMLInputElement>('#comment-author')?.focus(); return }
+    if (!body)   { inner.querySelector<HTMLTextAreaElement>('#comment-body')?.focus(); return }
+    btn.disabled = true; btn.textContent = 'Enviando…'
+    try {
+      await submitComment(ep.id, author, body)
+      // Keep modal-comments visible, hide form, show success
+      inner.querySelector<HTMLElement>('#modal-comment-form')!.style.display   = 'none'
+      inner.querySelector<HTMLElement>('#comment-form-trigger')!.style.display = 'none'
+      const sent = inner.querySelector<HTMLElement>('#comment-sent')!
+      sent.style.display = 'flex'
+      // Scroll success message into view
+      sent.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    } catch {
+      btn.disabled = false; btn.textContent = 'Enviar'
+      alert('Error al enviar. Inténtalo de nuevo.')
+    }
+  })
 }
 
 export function closeEpisodeModal() {
@@ -334,8 +437,8 @@ export function closeEpisodeModal() {
   document.body.style.overflow = ''
   currentModalId = null
   stopModalSync()
-  reactionUnsub?.()
-  reactionUnsub = null
+  reactionUnsub?.(); reactionUnsub = null
+  commentUnsub?.();  commentUnsub  = null
 }
 
 // ── Reactions ─────────────────────────────────────────────────────────────────
@@ -369,7 +472,31 @@ async function loadReactions(episodeId: string) {
   })
 }
 
-// ── Modal sync ────────────────────────────────────────────────────────────────
+// ── Comments loader ───────────────────────────────────────────────────────────
+async function loadComments(episodeId: string) {
+  const list = document.getElementById('modal-comments-list')
+  if (!list) return
+  const comments = await getApprovedComments(episodeId)
+
+  // Update icon count
+  const lbl = document.getElementById('comment-count-lbl')
+  if (lbl) lbl.textContent = comments.length ? String(comments.length) : ''
+
+  if (!comments.length) {
+    list.innerHTML = `<div class="comments-empty">Sé la primera/o en comentar.</div>`
+    return
+  }
+  list.innerHTML = comments.map(c => {
+    const date = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    return `<div class="comment-item">
+      <div class="comment-meta">
+        <span class="comment-author">${c.author}</span>
+        <span class="comment-date">${date}</span>
+      </div>
+      <div class="comment-body">${c.body}</div>
+    </div>`
+  }).join('')
+}
 let modalSyncInterval: ReturnType<typeof setInterval> | null = null
 function startModalSync() {
   stopModalSync()

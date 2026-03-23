@@ -3,7 +3,8 @@ import {
   uploadAudio, uploadCover,
   insertEpisode, updateEpisode, deleteEpisode,
   fetchEpisodes, coverUrl,
-  getSetting, setSetting
+  getSetting, setSetting,
+  getPendingComments, approveComment, rejectComment
 } from '../lib/supabase'
 import { setEps, eps } from './player'
 import { renderAll } from './grid'
@@ -67,6 +68,7 @@ function showUploadPanel() {
   if (ta) ta.value = saved || current
   initAdminTabs()
   renderManage()
+  renderComments()
 }
 
 function initAdminTabs() {
@@ -87,6 +89,7 @@ function switchTab(name: string) {
   document.querySelectorAll('.admin-tab-content').forEach(c =>
     c.classList.toggle('on', c.id === `tab-${name}`)
   )
+  if (name === 'comments') renderComments()
 }
 
 // ── File pickers (new episode) ────────────────────────────────────────────────
@@ -361,6 +364,68 @@ export function renderManage() {
   })
   list.querySelectorAll<HTMLButtonElement>('[data-del]').forEach(btn => {
     btn.addEventListener('click', () => deleteEp(btn.dataset.del!))
+  })
+}
+
+// ── Comments moderation ───────────────────────────────────────────────────────
+export async function renderComments() {
+  const list  = document.getElementById('admin-comments-list')
+  const empty = document.getElementById('admin-comments-empty')
+  const badge = document.getElementById('admin-pending-count')
+  if (!list) return
+
+  const comments = await getPendingComments()
+
+  // Update pending badge on tab
+  if (badge) {
+    if (comments.length) {
+      badge.textContent = String(comments.length)
+      badge.style.display = 'inline-flex'
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+
+  if (!comments.length) {
+    if (empty) empty.style.display = 'block'
+    list.innerHTML = ''
+    return
+  }
+  if (empty) empty.style.display = 'none'
+
+  list.innerHTML = comments.map(c => {
+    const ep    = (c as any).episodes
+    const date  = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    return `<div class="admin-comment-item" id="ac-${c.id}">
+      <div class="admin-comment-meta">
+        <span class="admin-comment-author">${c.author}</span>
+        <span class="admin-comment-ep">${ep?.title ?? 'Episodio desconocido'}</span>
+        <span class="admin-comment-date">${date}</span>
+      </div>
+      <div class="admin-comment-body">${c.body}</div>
+      <div class="admin-comment-actions">
+        <button class="btnp admin-approve-btn" data-approve="${c.id}">✓ Aprobar</button>
+        <button class="btndel" data-reject="${c.id}">✕ Rechazar</button>
+      </div>
+    </div>`
+  }).join('')
+
+  list.querySelectorAll<HTMLButtonElement>('[data-approve]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Aprobando…'
+      await approveComment(btn.dataset.approve!)
+      toast('Comentario aprobado.')
+      renderComments()
+    })
+  })
+  list.querySelectorAll<HTMLButtonElement>('[data-reject]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('¿Rechazar y eliminar este comentario?')) return
+      btn.disabled = true; btn.textContent = 'Rechazando…'
+      await rejectComment(btn.dataset.reject!)
+      toast('Comentario rechazado.')
+      renderComments()
+    })
   })
 }
 

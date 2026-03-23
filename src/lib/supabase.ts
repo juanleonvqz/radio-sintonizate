@@ -184,3 +184,64 @@ export function subscribeToReactions(episodeId: string, onChange: () => void) {
     }, onChange)
     .subscribe()
 }
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export interface Comment {
+  id:         string
+  episode_id: string
+  author:     string
+  body:       string
+  status:     'pending' | 'approved'
+  created_at: string
+}
+
+export async function getApprovedComments(episodeId: string): Promise<Comment[]> {
+  const { data } = await sb
+    .from('comments')
+    .select('*')
+    .eq('episode_id', episodeId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: true })
+  return data ?? []
+}
+
+export async function submitComment(episodeId: string, author: string, body: string): Promise<void> {
+  const { error } = await sb.from('comments').insert({
+    episode_id: episodeId,
+    author: author.trim().slice(0, 50),
+    body: body.trim().slice(0, 500),
+    status: 'pending',
+  })
+  if (error) throw error
+}
+
+// Admin only
+export async function getPendingComments(): Promise<Comment[]> {
+  const { data } = await sb
+    .from('comments')
+    .select('*, episodes(title)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+  return data ?? []
+}
+
+export async function approveComment(id: string): Promise<void> {
+  const { error } = await sb.from('comments').update({ status: 'approved' }).eq('id', id)
+  if (error) throw error
+}
+
+export async function rejectComment(id: string): Promise<void> {
+  const { error } = await sb.from('comments').delete().eq('id', id)
+  if (error) throw error
+}
+
+export function subscribeToComments(episodeId: string, onChange: () => void) {
+  return sb
+    .channel(`comments-${episodeId}`)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'comments',
+      filter: `episode_id=eq.${episodeId}`,
+    }, onChange)
+    .subscribe()
+}
