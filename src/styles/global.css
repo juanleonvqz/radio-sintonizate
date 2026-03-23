@@ -323,35 +323,21 @@ body.light #player { background: rgba(245, 240, 232, .97); }
 }
 .closebtn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px; display: flex; align-items: center; flex-shrink: 0; }
 
-/* ── FAB — discreet admin entry ── */
-#fab {
-  position: fixed;
-  bottom: calc(var(--sb) + 1rem);
-  right: calc(var(--sr) + 1rem);
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,.08);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,.15);
-  z-index: 50;
-  transition: all .3s;
-  /* Barely visible by default */
-  opacity: .35;
+/* ── ADMIN BUTTON in footer ── */
+.footer-admin-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Karla', sans-serif;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.25);
+  padding: 4px 6px; border-radius: 3px;
+  transition: color .2s, background .2s;
+  vertical-align: middle; margin-left: .5rem;
+  min-height: 28px; /* comfortable tap target */
 }
-#fab.up    { opacity: 0; pointer-events: none; }
-#fab:hover {
-  opacity: 1;
-  background: var(--bg-card);
-  border-color: var(--border);
-  color: var(--muted);
-  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+.footer-admin-btn:hover {
+  color: rgba(255,255,255,.6);
+  background: rgba(255,255,255,.06);
 }
-#fab:active { transform: scale(.92); }
-/* Light mode */
-body.light #fab { color: rgba(0,0,0,.12); border-color: rgba(0,0,0,.08); }
-body.light #fab:hover { background: var(--bg-card); border-color: var(--border); color: var(--muted); }
 
 /* ── ADMIN OVERLAY ── */
 #aov     { display: none; position: fixed; inset: 0; background: var(--admin-overlay); z-index: 200; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: .75rem; align-items: flex-start; justify-content: center; }
