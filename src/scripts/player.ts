@@ -94,6 +94,8 @@ function updatePP() {
   if (play)  play.style.display  = playing ? 'none'  : 'block'
   if (pause) pause.style.display = playing ? 'block' : 'none'
   wave?.classList.toggle('on', playing)
+  // Drive header waveform animation via body class
+  document.body.classList.toggle('audio-playing', playing)
   // Sync card play/pause icons
   notifyGrid()
 }

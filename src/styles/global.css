@@ -128,10 +128,12 @@ header::after {
 
 /* Waveform */
 .wave   { display: flex; align-items: center; gap: 3px; height: 32px; }
-.wbar   { width: 3px; border-radius: 2px; opacity: .6; animation: wanim 1.2s ease-in-out infinite; }
+.wbar   { width: 3px; border-radius: 2px; opacity: .25; transform: scaleY(.15); }
 .wbar:nth-child(3n+1) { background: var(--logo-purple); }
 .wbar:nth-child(3n+2) { background: var(--logo-gold); }
 .wbar:nth-child(3n)   { background: var(--logo-green); }
+/* Only animate when body has .playing class — set by player.ts */
+body.audio-playing .wbar { opacity: .6; animation: wanim 1.2s ease-in-out infinite; }
 @keyframes wanim { 0%,100% { transform: scaleY(.15); } 50% { transform: scaleY(1); } }
 
 /* Nav */
@@ -171,10 +173,10 @@ nav::-webkit-scrollbar { display: none; }
 
 /* ── MAIN ── */
 main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; padding-bottom: calc(90px + var(--sb) + 4rem); }
-.mh     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: .75rem; }
+.mh     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: .5rem; flex-wrap: wrap; }
 .mtitle { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; letter-spacing: 2px; flex-shrink: 0; }
-.mh-right { display: flex; align-items: center; gap: .75rem; flex: 1; justify-content: flex-end; min-width: 0; }
-.ecount { font-size: 11px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; flex-shrink: 0; }
+.mh-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; min-width: 0; }
+.ecount { font-size: 11px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
 
 /* ── EPISODE GRID ── */
 .grid { display: block; }

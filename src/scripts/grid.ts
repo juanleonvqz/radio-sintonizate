@@ -141,7 +141,17 @@ function renderGrid() {
     })
   })
   grid.querySelectorAll<HTMLButtonElement>('[data-play]').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); playEp(btn.dataset.play!) })
+    btn.addEventListener('click', e => {
+      e.stopPropagation()
+      const id = btn.dataset.play!
+      if (id === curId) {
+        // Same episode — toggle play/pause
+        import('./player').then(m => m.togglePlay())
+      } else {
+        // Different episode — start playing it
+        playEp(id)
+      }
+    })
   })
   grid.querySelectorAll<HTMLButtonElement>('[data-share]').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); shareEp(btn.dataset.share!) })
