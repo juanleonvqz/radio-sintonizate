@@ -46,7 +46,6 @@ export async function playEp(id: string) {
 
   document.getElementById('player')?.classList.add('on')
   document.getElementById('fab')?.classList.add('up')
-  document.body.classList.add('player-open')
 
   aud.src = audioUrl(ep.audio_path)
   aud.play().catch(() => {})
@@ -78,7 +77,6 @@ export function closePlayer() {
   aud?.pause(); playing = false; curId = null
   document.getElementById('player')?.classList.remove('on')
   document.getElementById('fab')?.classList.remove('up')
-  document.body.classList.remove('player-open')
   document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'))
   updatePP()
 }

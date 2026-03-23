@@ -181,9 +181,8 @@ nav::-webkit-scrollbar { display: none; }
 .desc-body  { font-size: 14px; color: var(--muted); line-height: 1.65; white-space: pre-line; }
 
 /* ── MAIN ── */
-main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 1.5rem; }
-/* When player is open, add enough bottom padding to clear it */
-body.player-open main { padding-bottom: calc(80px + var(--sb) + 1rem); }
+/* Fixed padding — player bar is 68px tall, always reserve it */
+main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 .mh     { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: .5rem; flex-wrap: wrap; }
 .mtitle { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; letter-spacing: 2px; flex-shrink: 0; }
 .mh-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; min-width: 0; }
@@ -743,7 +742,7 @@ body.light .school-logo-img {
   .modal-controls { gap: .5rem; }
   .modal-play-btn { width: 52px; height: 52px; }
   .modal-share-btn { padding: 9px 12px; font-size: 11px; }
-  main { padding: 1.25rem .9rem 1.25rem; }
+  main { padding: 1.25rem .9rem 2rem; }
   .htop { padding: 1rem .9rem .75rem; }
   .footer-links { gap: .5rem; }
   .flink { padding: 6px 11px; font-size: 11px; }

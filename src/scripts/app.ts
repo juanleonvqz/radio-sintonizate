@@ -57,7 +57,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('skip-back-btn')    ?.addEventListener('click', () => skip(-15))
   document.getElementById('skip-fwd-btn')     ?.addEventListener('click', () => skip(15))
   document.getElementById('close-player-btn') ?.addEventListener('click', closePlayer)
-  document.getElementById('pinfo')            ?.addEventListener('click', scrollToCard)
+  document.getElementById('pinfo')            ?.addEventListener('click', () => {
+    import('./player').then(({ curId }) => {
+      if (curId) import('./grid').then(m => m.openEpisodeModal(curId!))
+      else scrollToCard()
+    })
+  })
   document.getElementById('pmini')            ?.addEventListener('click', (e) => seekMini(e as MouseEvent))
   document.getElementById('vol-range')        ?.addEventListener('input', (e) => {
     const aud = document.getElementById('aud') as HTMLAudioElement | null
