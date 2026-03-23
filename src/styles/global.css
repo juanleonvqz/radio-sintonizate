@@ -1032,9 +1032,7 @@ body.light .footer-school-logo { filter: none; }
 
 .episodes-rest { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
 
-/* Listened state */
-.card-listened { opacity: .65; }
-.card-listened:hover { opacity: 1; }
+/* Listened state — badge only, no dimming */
 .listened-badge {
   position: absolute; bottom: .45rem; left: .45rem;
   background: rgba(0,0,0,.65); color: rgba(255,255,255,.7);
