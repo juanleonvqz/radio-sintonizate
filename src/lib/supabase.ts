@@ -152,7 +152,7 @@ export function getAudioDuration(url: string): Promise<number> {
 
 // ── Emoji reactions ───────────────────────────────────────────────────────────
 
-export const EMOJIS = ['👏', '❤️', '🎙️', '🔥', '😂'] as const
+export const EMOJIS = ['👏', '❤️', '🎙️', '🔥'] as const
 export type Emoji = typeof EMOJIS[number]
 
 export interface ReactionCounts {
