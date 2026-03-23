@@ -1,7 +1,7 @@
 export function setupPWA() {
   // Use the actual Radio Sintonízate logo for the PWA icon
   // It lives in public/logos/ so we can reference it by URL
-  const logoUrl = '/logos/Logo_radio_DEGRADADOS.jpg'
+  const logoUrl = '/logos/Logo_radio_sintonizate_Black.jpg'
 
   // For manifest icons we need base64 — load the image and convert via canvas
   function logoToDataUrl(size: number): Promise<string> {

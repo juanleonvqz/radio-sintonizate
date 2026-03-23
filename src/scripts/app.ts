@@ -10,12 +10,17 @@
  *  6. Set up PWA
  */
 
-import { fetchEpisodes, subscribeToEpisodes } from '../lib/supabase'
+import { fetchEpisodes, subscribeToEpisodes, subscribeToSettings } from '../lib/supabase'
 import { initTheme, toggleTheme }             from './theme'
 import { initPlayer, togglePlay, skip, seekMini, closePlayer, scrollToCard, setEps, eps } from './player'
 import { renderAll }                          from './grid'
 import { closeEpisodeModal }                  from './grid'
-import { openAdmin, closeAdmin, doLogin, doSignOut, onCover, onAudio, publish, saveDesc, loadSiteDesc, initDropZones } from './admin'
+import {
+  openAdmin, closeAdmin, doLogin, doSignOut,
+  onCover, onAudio, publish,
+  onEditCover, onEditAudio, saveEdit, closeEditPanel,
+  saveDesc, loadSiteDesc, initDropZones
+} from './admin'
 import { setupPWA, initInstallPrompt, promptInstall, dismissPWA } from './pwa'
 import { checkDeepLink, generateRSS }         from './share'
 
@@ -80,10 +85,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('au-inp')          ?.addEventListener('change', onAudio)
   initDropZones()
 
-  // ── Episode modal ─────────────────────────────────────────────────────────────
-  document.getElementById('ep-modal-close')   ?.addEventListener('click', closeEpisodeModal)
-  document.getElementById('ep-modal-backdrop')?.addEventListener('click', closeEpisodeModal)
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEpisodeModal() })
+  // ── Edit panel ────────────────────────────────────────────────────────────────
+  document.getElementById('edit-close-btn')  ?.addEventListener('click', closeEditPanel)
+  document.getElementById('save-edit-btn')   ?.addEventListener('click', saveEdit)
+  document.getElementById('edit-cv-inp')     ?.addEventListener('change', onEditCover)
+  document.getElementById('edit-au-inp')     ?.addEventListener('change', onEditAudio)
+  document.getElementById('edit-panel')      ?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('edit-panel')) closeEditPanel()
+  })
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    // Don't fire shortcuts when typing in an input or textarea
+    const tag = (e.target as HTMLElement).tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return
+    // Don't fire when admin overlay is open
+    if (document.getElementById('aov')?.classList.contains('on')) return
+
+    switch (e.key) {
+      case ' ':
+      case 'k':
+        e.preventDefault()
+        togglePlay()
+        break
+      case 'ArrowLeft':
+      case 'j':
+        e.preventDefault()
+        skip(-15)
+        break
+      case 'ArrowRight':
+      case 'l':
+        e.preventDefault()
+        skip(15)
+        break
+      case 'Escape':
+        closePlayer()
+        closeEpisodeModal()
+        break
+      case 'm':
+        const audEl = document.getElementById('aud') as HTMLAudioElement | null
+        if (audEl) audEl.muted = !audEl.muted
+        break
+    }
+  })
+  document.getElementById('ep-modal-close')    ?.addEventListener('click', closeEpisodeModal)
+  document.getElementById('ep-modal-backdrop') ?.addEventListener('click', closeEpisodeModal)
+
 
   // ── RSS button ────────────────────────────────────────────────────────────────
   document.getElementById('rss-btn')?.addEventListener('click', () => generateRSS(eps))
@@ -120,6 +167,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await reload()
     setEps(data)
     renderAll()
+  })
+
+  // ── Realtime — update site description when admin changes it ──────────────
+  subscribeToSettings(async () => {
+    const { getSetting } = await import('../lib/supabase')
+    const val = await getSetting('site_description')
+    if (val) {
+      const body = document.getElementById('desc-body')
+      if (body) body.textContent = val
+    }
   })
 
 })

@@ -54,6 +54,14 @@ export async function insertEpisode(ep: Omit<Episode, 'id' | 'created_at'>): Pro
   if (error) throw error
 }
 
+export async function updateEpisode(
+  id: string,
+  fields: Partial<Omit<Episode, 'id' | 'created_at'>>
+): Promise<void> {
+  const { error } = await sb.from('episodes').update(fields).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteEpisode(id: string, audioPth: string, coverPth: string | null): Promise<void> {
   const { error } = await sb.from('episodes').delete().eq('id', id)
   if (error) throw error
@@ -94,4 +102,50 @@ export function subscribeToEpisodes(onChange: () => void) {
     .channel('episodes-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'episodes' }, onChange)
     .subscribe()
+}
+
+// ── Site settings (global, Supabase-backed) ───────────────────────────────────
+
+export async function getSetting(key: string): Promise<string | null> {
+  const { data } = await sb
+    .from('site_settings')
+    .select('value')
+    .eq('key', key)
+    .single()
+  return data?.value ?? null
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  const { error } = await sb
+    .from('site_settings')
+    .upsert({ key, value, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+export function subscribeToSettings(onChange: () => void) {
+  return sb
+    .channel('settings-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, onChange)
+    .subscribe()
+}
+
+// ── Audio duration helper ─────────────────────────────────────────────────────
+// Fetches duration of an audio file without downloading it fully.
+// Uses a hidden <audio> element — resolves once metadata loads.
+
+const durationCache = new Map<string, number>()
+
+export function getAudioDuration(url: string): Promise<number> {
+  if (durationCache.has(url)) return Promise.resolve(durationCache.get(url)!)
+  return new Promise((resolve) => {
+    const a = document.createElement('audio')
+    a.preload = 'metadata'
+    a.onloadedmetadata = () => {
+      const d = isFinite(a.duration) ? a.duration : 0
+      durationCache.set(url, d)
+      resolve(d)
+    }
+    a.onerror = () => resolve(0)
+    a.src = url
+  })
 }

@@ -1,4 +1,3 @@
-// Runs immediately (before paint) to avoid flash of wrong theme
 export function applyTheme(light: boolean) {
   document.body.classList.toggle('light', light)
   const icon = document.getElementById('theme-icon')
@@ -9,24 +8,17 @@ export function applyTheme(light: boolean) {
   if (lbl)  lbl.textContent  = light ? 'Oscuro' : 'Claro'
   if (meta) meta.content     = light ? '#F5F0E8' : '#0C0906'
 
-  // ── All logos follow one simple rule ─────────────────────────────────────
-  // Light mode  → white/light backgrounds  → use dark-ink versions
-  // Dark mode   → dark backgrounds         → use light/white versions
-
-  // Radio Sintonízate — header + any other instances
-  const radioLogos = document.querySelectorAll<HTMLImageElement>('.radio-logo-img')
-  radioLogos.forEach(img => {
+  // Light mode (default) → _White, Dark mode → _Black
+  document.querySelectorAll<HTMLImageElement>('.radio-logo-img').forEach(img => {
     img.src = light
-      ? '/logos/Logo_radio_sintonizate_White.jpg'   // white bg version
-      : '/logos/Logo_radio_sintonizate_Black.jpg'  // dark bg version
+      ? '/logos/Logo_radio_sintonizate_White.jpg'
+      : '/logos/Logo_radio_sintonizate_Black.jpg'
   })
 
-  // IES El Mayorazgo — footer + any other instances
-  const schoolLogos = document.querySelectorAll<HTMLImageElement>('.school-logo-img')
-  schoolLogos.forEach(img => {
+  document.querySelectorAll<HTMLImageElement>('.school-logo-img').forEach(img => {
     img.src = light
-      ? '/logos/Logo_IES_ELMayorazgo_Black.png'   // dark ink on light bg
-      : '/logos/Logo_IES_ELMayorazgo_White.png'   // white ink on dark bg
+      ? '/logos/Logo_IES_ELMayorazgo_White.png'
+      : '/logos/Logo_IES_ELMayorazgo_Black.png'
   })
 }
 
@@ -37,5 +29,6 @@ export function toggleTheme() {
 }
 
 export function initTheme() {
-  applyTheme(localStorage.getItem('rm-theme') === 'light')
+  // Default is light mode — only go dark if user explicitly chose dark
+  applyTheme(localStorage.getItem('rm-theme') !== 'dark')
 }

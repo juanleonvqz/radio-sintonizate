@@ -15,8 +15,10 @@ const { title = 'Radio Sintonízate · IES El Mayorazgo' } = Astro.props
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Radio Sintonízate" />
   <meta name="description" content="La radio oficial del IES El Mayorazgo, La Orotava, Tenerife." />
+  <link rel="icon" type="image/jpeg" href="/logos/Logo_radio_sintonizate_White.jpg" />
+  <link rel="shortcut icon" type="image/jpeg" href="/logos/Logo_radio_sintonizate_White.jpg" />
   <link id="pwa-manifest" rel="manifest" />
-  <link id="apple-icon"   rel="apple-touch-icon" />
+  <link id="apple-icon" rel="apple-touch-icon" href="/logos/Logo_radio_sintonizate_White.jpg" />
   <title>{title}</title>
   <!-- Preconnect to font CDN — reduces first load latency -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,23 +30,30 @@ const { title = 'Radio Sintonízate · IES El Mayorazgo' } = Astro.props
   <!-- Inline theme script — must run before paint to avoid flash of wrong theme -->
   <script is:inline>
     (function() {
-      if (localStorage.getItem('rm-theme') === 'light') {
+      // Light is default — only apply dark if user explicitly chose it
+      if (localStorage.getItem('rm-theme') === 'dark') {
+        document.documentElement.classList.add('dark-pending')
+      } else {
+        // Default: apply light immediately
         document.documentElement.classList.add('light-pending')
       }
     })()
   </script>
   <style is:inline>
-    /* Apply light theme to html before body is available */
     html.light-pending body { background: #F5F0E8; color: #1A1108; }
+    html.dark-pending  body { background: #0C0906; color: #F0E6CC; }
   </style>
 </head>
 <body>
   <slot />
-  <!-- Remove pending class after body is available -->
   <script is:inline>
-    if (document.documentElement.classList.contains('light-pending')) {
-      document.documentElement.classList.remove('light-pending')
+    const html = document.documentElement
+    if (html.classList.contains('light-pending')) {
+      html.classList.remove('light-pending')
       document.body.classList.add('light')
+    } else if (html.classList.contains('dark-pending')) {
+      html.classList.remove('dark-pending')
+      // body has no extra class — dark is the CSS default
     }
   </script>
 </body>

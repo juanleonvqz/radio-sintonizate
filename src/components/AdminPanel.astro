@@ -1,13 +1,13 @@
 ---
-// Admin overlay — auth + episode upload + site description editor
+// Admin overlay — auth + tabbed episode management
 // Logic lives in src/scripts/admin.ts
 ---
 
-<!-- Admin FAB -->
-<button id="fab" aria-label="Administración">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-    <circle cx="12" cy="8" r="4"/>
-    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+<!-- Admin FAB — discreet gear icon -->
+<button id="fab" aria-label="Administración" title="Administración">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 </button>
 
@@ -26,7 +26,6 @@
     <div id="lpanel">
       <div class="atitle" style="color:var(--cream)">Acceso Admin</div>
       <div class="asub">Inicia sesión con tu cuenta de administrador.</div>
-
       <div class="fg">
         <label>Email</label>
         <input class="fc" type="email" id="email-inp" placeholder="admin@radiosintonizate.com" autocomplete="email" />
@@ -40,75 +39,134 @@
       <p class="hint">Crea usuarios en Supabase Dashboard → Authentication → Users</p>
     </div>
 
-    <!-- ── UPLOAD PANEL ── -->
+    <!-- ── UPLOAD PANEL (tabbed) ── -->
     <div id="upanel" style="display:none">
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;flex-wrap:wrap;gap:.5rem">
-        <div class="atitle">Nuevo episodio</div>
+      <!-- Header row -->
+      <div class="admin-panel-header">
+        <div class="atitle">Admin</div>
         <button class="btndel" id="signout-btn" style="border-color:rgba(140,125,98,.3);color:var(--muted)">
           Cerrar sesión
         </button>
       </div>
-      <div class="asub">Rellena los datos y sube el audio.</div>
 
-      <div class="fg">
-        <label>Nombre del programa</label>
-        <input class="fc" type="text" id="f-prog" placeholder="Noticias, Cuñas, Deportes…" autocomplete="off" />
-      </div>
-      <div class="fg">
-        <label>Título del episodio *</label>
-        <input class="fc" type="text" id="f-ttl" placeholder="Episodio 3 — La Orotava" autocomplete="off" />
-      </div>
-      <div class="fg">
-        <label>Descripción</label>
-        <textarea class="fc" id="f-desc" rows="3" placeholder="De qué trata este episodio…"></textarea>
-      </div>
-      <div class="fg">
-        <label>Fecha de emisión</label>
-        <input class="fc" type="date" id="f-date" />
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab on" data-tab="manage">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Episodios
+        </button>
+        <button class="admin-tab" data-tab="new">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo
+        </button>
+        <button class="admin-tab" data-tab="settings">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Ajustes
+        </button>
       </div>
 
-      <!-- Cover photo -->
-      <div class="fg">
-        <label>Foto de portada</label>
-        <div class="dz" id="cv-dz">
-          <input type="file" accept="image/*" id="cv-inp" />
-          <div class="dz-ico">🖼️</div>
-          <div class="dz-txt">Arrastra la foto o <strong>toca aquí</strong></div>
-          <div class="dz-fn" id="cv-fn"></div>
+      <!-- ── TAB: MANAGE EPISODES ── -->
+      <div class="admin-tab-content on" id="tab-manage">
+        <div class="admin-ep-empty" id="admin-ep-empty" style="display:none">
+          <p>Aún no hay episodios publicados.</p>
+          <button class="btnp" style="margin-top:.75rem" onclick="document.querySelector('[data-tab=new]').click()">
+            Publicar el primero
+          </button>
         </div>
-        <div id="cvwrap"><img id="cvimg" src="" alt="portada" /></div>
-      </div>
-
-      <!-- Audio file -->
-      <div class="fg">
-        <label>Archivo de audio *</label>
-        <div class="dz" id="au-dz">
-          <input type="file" accept="audio/*" id="au-inp" />
-          <div class="dz-ico">🎙️</div>
-          <div class="dz-txt">Arrastra el audio o <strong>toca aquí</strong></div>
-          <div class="dz-fn" id="au-fn"></div>
-        </div>
-      </div>
-
-      <button class="btnp" id="pub-btn">Publicar episodio</button>
-
-      <!-- Manage existing episodes -->
-      <div class="mgsec" id="mgsec" style="display:none">
-        <h3 id="mgh">Episodios publicados</h3>
         <div id="mglist"></div>
       </div>
 
-      <!-- Site description editor -->
-      <div class="mgsec">
-        <h3>Descripción del sitio</h3>
-        <div class="fg" style="margin-bottom:.75rem">
-          <label>Texto de bienvenida</label>
-          <textarea class="fc" id="site-desc" rows="4" placeholder="Escribe aquí la descripción pública de la radio…"></textarea>
+      <!-- ── TAB: NEW EPISODE ── -->
+      <div class="admin-tab-content" id="tab-new">
+        <div class="fg"><label>Nombre del programa</label><input class="fc" type="text" id="f-prog" placeholder="Noticias, Cuñas, Deportes…" autocomplete="off" /></div>
+        <div class="fg"><label>Título del episodio *</label><input class="fc" type="text" id="f-ttl" placeholder="Episodio 3 — La Orotava" autocomplete="off" /></div>
+        <div class="fg"><label>Descripción</label><textarea class="fc" id="f-desc" rows="3" placeholder="De qué trata este episodio…"></textarea></div>
+        <div class="fg"><label>Fecha de emisión</label><input class="fc" type="date" id="f-date" /></div>
+        <div class="fg">
+          <label>Foto de portada</label>
+          <div class="dz" id="cv-dz">
+            <input type="file" accept="image/*" id="cv-inp" />
+            <div class="dz-ico">🖼️</div>
+            <div class="dz-txt">Arrastra la foto o <strong>toca aquí</strong></div>
+            <div class="dz-fn" id="cv-fn"></div>
+          </div>
+          <div id="cvwrap"><img id="cvimg" src="" alt="portada" /></div>
         </div>
-        <button class="btnp" id="save-desc-btn">Guardar descripción</button>
+        <div class="fg">
+          <label>Archivo de audio *</label>
+          <div class="dz" id="au-dz">
+            <input type="file" accept="audio/*" id="au-inp" />
+            <div class="dz-ico">🎙️</div>
+            <div class="dz-txt">Arrastra el audio o <strong>toca aquí</strong></div>
+            <div class="dz-fn" id="au-fn"></div>
+          </div>
+        </div>
+        <button class="btnp" id="pub-btn">Publicar episodio</button>
+      </div>
+
+      <!-- ── TAB: SETTINGS ── -->
+      <div class="admin-tab-content" id="tab-settings">
+        <div class="mgsec" style="margin-top:0;padding-top:0;border-top:none">
+          <h3 style="margin-bottom:.9rem">Descripción del sitio</h3>
+          <div class="fg" style="margin-bottom:.75rem">
+            <label>Texto de bienvenida</label>
+            <textarea class="fc" id="site-desc" rows="5" placeholder="Escribe aquí la descripción pública de la radio…"></textarea>
+          </div>
+          <button class="btnp" id="save-desc-btn">Guardar descripción</button>
+        </div>
       </div>
 
     </div><!-- /upanel -->
   </div><!-- /abox -->
 </div><!-- /aov -->
+
+<!-- ── EDIT EPISODE PANEL ── -->
+<div id="edit-panel">
+  <div class="edit-sheet">
+    <div class="edit-header">
+      <h3>Editar episodio</h3>
+      <button class="edit-close" id="edit-close-btn" aria-label="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="edit-cv-wrap" style="display:none">
+      <div id="edit-cv-ph" class="edit-ep-thumb-ph">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2">
+          <circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/>
+        </svg>
+      </div>
+      <img id="edit-cv-img" class="edit-ep-thumb" src="" alt="" style="display:none" />
+    </div>
+
+    <div class="fg"><label>Título *</label><input class="fc" type="text" id="edit-ttl" autocomplete="off" /></div>
+    <div class="fg"><label>Programa</label><input class="fc" type="text" id="edit-prog" autocomplete="off" /></div>
+    <div class="fg"><label>Descripción</label><textarea class="fc" id="edit-desc" rows="3"></textarea></div>
+    <div class="fg"><label>Fecha</label><input class="fc" type="date" id="edit-date" /></div>
+
+    <div class="fg">
+      <label>Cambiar portada <span style="color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none">(opcional)</span></label>
+      <div class="dz" id="edit-cv-dz">
+        <input type="file" accept="image/*" id="edit-cv-inp" />
+        <div class="dz-ico">🖼️</div>
+        <div class="dz-txt">Nueva foto o <strong>toca aquí</strong></div>
+        <div class="dz-fn" id="edit-cv-fn"></div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Cambiar audio <span style="color:var(--muted);font-size:10px;letter-spacing:0;text-transform:none">(opcional)</span></label>
+      <div class="dz" id="edit-au-dz">
+        <input type="file" accept="audio/*" id="edit-au-inp" />
+        <div class="dz-ico">🎙️</div>
+        <div class="dz-txt">Nuevo audio o <strong>toca aquí</strong></div>
+        <div class="dz-fn" id="edit-au-fn"></div>
+      </div>
+    </div>
+
+    <button class="btnp" id="save-edit-btn">Guardar cambios</button>
+  </div>
+</div>

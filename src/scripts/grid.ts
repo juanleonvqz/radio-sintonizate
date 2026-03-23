@@ -1,4 +1,4 @@
-import { coverUrl } from '../lib/supabase'
+import { coverUrl, audioUrl, getAudioDuration } from '../lib/supabase'
 import { eps, curId, playing, playEp, aud, skip } from './player'
 import { shareEp } from './share'
 import type { Episode } from '../lib/types'
@@ -91,6 +91,7 @@ function renderGrid() {
         ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
         <div class="cfoot">
           <span class="cdate">${fmtDate(ep.date)}</span>
+          <span class="cdur" id="dur-${ep.id}"></span>
           <div class="cbtns">
             <button class="sharebtn" data-share="${ep.id}" aria-label="Compartir">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -118,6 +119,34 @@ function renderGrid() {
   grid.querySelectorAll<HTMLButtonElement>('[data-share]').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); shareEp(btn.dataset.share!) })
   })
+
+  // Load durations asynchronously — doesn't block render
+  loadDurations(sorted)
+}
+
+// ── Duration loader ───────────────────────────────────────────────────────────
+// Runs after grid renders — fetches audio metadata without blocking UI
+async function loadDurations(episodes: Episode[]) {
+  for (const ep of episodes) {
+    const el = document.getElementById(`dur-${ep.id}`)
+    if (!el) continue
+    try {
+      const url = audioUrl(ep.audio_path)
+      const secs = await getAudioDuration(url)
+      if (secs > 0) {
+        el.textContent = fmtDur(secs)
+        el.style.display = 'inline'
+      }
+    } catch { /* silent */ }
+  }
+}
+
+function fmtDur(secs: number): string {
+  const m = Math.floor(secs / 60)
+  const s = Math.floor(secs % 60)
+  return m >= 60
+    ? `${Math.floor(m / 60)}h ${m % 60}m`
+    : `${m}:${String(s).padStart(2, '0')}`
 }
 
 // ── Episode modal ─────────────────────────────────────────────────────────────
