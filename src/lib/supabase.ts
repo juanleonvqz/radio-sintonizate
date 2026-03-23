@@ -149,3 +149,38 @@ export function getAudioDuration(url: string): Promise<number> {
     a.src = url
   })
 }
+
+// ── Emoji reactions ───────────────────────────────────────────────────────────
+
+export const EMOJIS = ['👏', '❤️', '🔥'] as const
+export type Emoji = typeof EMOJIS[number]
+
+export interface ReactionCounts {
+  [emoji: string]: number
+}
+
+export async function getReactions(episodeId: string): Promise<ReactionCounts> {
+  const { data } = await sb
+    .from('reactions')
+    .select('emoji')
+    .eq('episode_id', episodeId)
+  if (!data) return {}
+  return data.reduce((acc: ReactionCounts, row) => {
+    acc[row.emoji] = (acc[row.emoji] ?? 0) + 1
+    return acc
+  }, {})
+}
+
+export async function addReaction(episodeId: string, emoji: Emoji): Promise<void> {
+  await sb.from('reactions').insert({ episode_id: episodeId, emoji })
+}
+
+export function subscribeToReactions(episodeId: string, onChange: () => void) {
+  return sb
+    .channel(`reactions-${episodeId}`)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'reactions',
+      filter: `episode_id=eq.${episodeId}`
+    }, onChange)
+    .subscribe()
+}

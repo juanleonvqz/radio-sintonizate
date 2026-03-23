@@ -13,8 +13,7 @@
 import { fetchEpisodes, subscribeToEpisodes, subscribeToSettings } from '../lib/supabase'
 import { initTheme, toggleTheme }             from './theme'
 import { initPlayer, togglePlay, skip, seekMini, closePlayer, scrollToCard, setEps, eps } from './player'
-import { renderAll }                          from './grid'
-import { closeEpisodeModal }                  from './grid'
+import { renderAll, closeEpisodeModal, initSearch } from './grid'
 import {
   openAdmin, closeAdmin, doLogin, doSignOut,
   onCover, onAudio, publish,
@@ -149,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setEps(data)
     renderAll()
     checkDeepLink()
+    initSearch()
   } catch (err: any) {
     console.error('Boot load error:', err)
     if (grid) {

@@ -1,10 +1,13 @@
-import { coverUrl, audioUrl, getAudioDuration } from '../lib/supabase'
-import { eps, curId, playing, playEp, aud, skip } from './player'
+import { coverUrl, audioUrl, getAudioDuration, getReactions, addReaction, subscribeToReactions, EMOJIS } from '../lib/supabase'
+import type { ReactionCounts } from '../lib/supabase'
+import { eps, curId, playing, playEp, skip } from './player'
 import { shareEp } from './share'
 import type { Episode } from '../lib/types'
 
-let activeF = 'all'
+let activeF   = 'all'
+let searchQ   = ''
 let currentModalId: string | null = null
+let reactionUnsub: (() => void) | null = null
 
 export function renderAll() {
   renderNav()
@@ -15,24 +18,31 @@ export function setFilter(v: string, btn?: HTMLElement) {
   activeF = v
   document.querySelectorAll('.nl').forEach(el => el.classList.remove('on'))
   btn?.classList.add('on')
-  renderAll()
+  renderGrid()
 }
 
-// Called by player.ts on every play/pause/timeupdate change
+// Called by player.ts on every play/pause change
 export function syncCardStates() {
   document.querySelectorAll<HTMLElement>('.card').forEach(card => {
-    const id = card.dataset.id
-    const isThis = id === curId
-    card.classList.toggle('playing', isThis && playing)
-    card.classList.toggle('paused',  isThis && !playing && curId !== null)
+    const id      = card.dataset.id
+    const isThis  = id === curId
+    const nowPlay = isThis && playing
+
+    card.classList.toggle('playing', nowPlay)
+    card.classList.toggle('paused',  isThis && !playing && !!curId)
+
+    // Play/pause icon on button
     const playIco  = card.querySelector<SVGElement>('.card-play-ico')
     const pauseIco = card.querySelector<SVGElement>('.card-pause-ico')
     if (playIco && pauseIco) {
-      playIco.style.display  = (isThis && playing) ? 'none'  : 'block'
-      pauseIco.style.display = (isThis && playing) ? 'block' : 'none'
+      playIco.style.display  = nowPlay ? 'none'  : 'block'
+      pauseIco.style.display = nowPlay ? 'block' : 'none'
     }
+
+    // Animated now-playing overlay on cover
+    const overlay = card.querySelector<HTMLElement>('.now-playing-overlay')
+    if (overlay) overlay.style.display = nowPlay ? 'flex' : 'none'
   })
-  // Also sync modal if it's open
   if (currentModalId) syncModal()
 }
 
@@ -56,34 +66,51 @@ function renderGrid() {
   const countEl = document.getElementById('ecount')
   if (!grid) return
 
-  const filtered = activeF === 'all' ? eps : eps.filter(e => e.program === activeF)
+  // Apply program filter + search query
+  let filtered = activeF === 'all' ? eps : eps.filter(e => e.program === activeF)
+  if (searchQ) {
+    const q = searchQ.toLowerCase()
+    filtered = filtered.filter(e =>
+      e.title.toLowerCase().includes(q) ||
+      (e.program  ?? '').toLowerCase().includes(q) ||
+      (e.description ?? '').toLowerCase().includes(q)
+    )
+  }
+
   if (countEl) countEl.textContent = `${eps.length} episodio${eps.length !== 1 ? 's' : ''}`
 
   if (!filtered.length) {
     grid.innerHTML = `<div class="state-box">
       <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>
-      <h3>${eps.length ? 'Sin episodios aquí' : 'Aún no hay episodios'}</h3>
-      <p>${eps.length ? 'Prueba con otro programa.' : 'Pulsa el botón de abajo para publicar el primer episodio.'}</p>
+      <h3>${searchQ ? 'Sin resultados' : eps.length ? 'Sin episodios aquí' : 'Aún no hay episodios'}</h3>
+      <p>${searchQ ? `No hay episodios que coincidan con "<strong>${searchQ}</strong>".` : eps.length ? 'Prueba con otro programa.' : 'El equipo publicará el primer episodio pronto.'}</p>
     </div>`
     return
   }
 
-  // Flat grid — sorted newest first, small month badge per card
   const sorted = [...filtered].sort((a, b) => {
     if (!a.date && !b.date) return 0
-    if (!a.date) return 1
-    if (!b.date) return -1
+    if (!a.date) return 1; if (!b.date) return -1
     return b.date.localeCompare(a.date)
   })
 
   grid.innerHTML = `<div class="episodes-flat">${sorted.map(ep => {
-    const cv = coverUrl(ep.cover_path)
+    const cv       = coverUrl(ep.cover_path)
     const isPlaying = ep.id === curId && playing
-    const isPaused  = ep.id === curId && !playing && curId !== null
+    const isPaused  = ep.id === curId && !playing && !!curId
+
     return `<div class="card ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''}" id="card-${ep.id}" data-id="${ep.id}">
-      ${cv
-        ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="lazy">`
-        : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
+      <div class="cimg-wrap">
+        ${cv
+          ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="lazy">`
+          : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
+        <div class="now-playing-overlay" style="display:${isPlaying ? 'flex' : 'none'}">
+          <div class="np-bars">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <span class="np-lbl">Reproduciendo</span>
+        </div>
+      </div>
       <div class="cbody">
         ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
         <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
@@ -120,42 +147,48 @@ function renderGrid() {
     btn.addEventListener('click', e => { e.stopPropagation(); shareEp(btn.dataset.share!) })
   })
 
-  // Load durations asynchronously — doesn't block render
   loadDurations(sorted)
 }
 
+// ── Search ────────────────────────────────────────────────────────────────────
+export function initSearch() {
+  const input = document.getElementById('search-inp') as HTMLInputElement | null
+  const clear = document.getElementById('search-clear')
+  if (!input) return
+
+  input.addEventListener('input', () => {
+    searchQ = input.value.trim()
+    if (clear) clear.style.display = searchQ ? 'flex' : 'none'
+    renderGrid()
+  })
+
+  clear?.addEventListener('click', () => {
+    searchQ = ''
+    input.value = ''
+    clear.style.display = 'none'
+    renderGrid()
+    input.focus()
+  })
+}
+
 // ── Duration loader ───────────────────────────────────────────────────────────
-// Runs after grid renders — fetches audio metadata without blocking UI
 async function loadDurations(episodes: Episode[]) {
   for (const ep of episodes) {
     const el = document.getElementById(`dur-${ep.id}`)
     if (!el) continue
     try {
-      const url = audioUrl(ep.audio_path)
-      const secs = await getAudioDuration(url)
-      if (secs > 0) {
-        el.textContent = fmtDur(secs)
-        el.style.display = 'inline'
-      }
+      const secs = await getAudioDuration(audioUrl(ep.audio_path))
+      if (secs > 0) { el.textContent = fmtDur(secs); el.style.display = 'inline' }
     } catch { /* silent */ }
   }
-}
-
-function fmtDur(secs: number): string {
-  const m = Math.floor(secs / 60)
-  const s = Math.floor(secs % 60)
-  return m >= 60
-    ? `${Math.floor(m / 60)}h ${m % 60}m`
-    : `${m}:${String(s).padStart(2, '0')}`
 }
 
 // ── Episode modal ─────────────────────────────────────────────────────────────
 export function openEpisodeModal(id: string) {
   const ep = eps.find(e => e.id === id)
   if (!ep) return
-
   currentModalId = id
-  const cv = coverUrl(ep.cover_path)
+  const cv       = coverUrl(ep.cover_path)
   const isPlaying = id === curId && playing
 
   const modal = document.getElementById('ep-modal')
@@ -166,13 +199,8 @@ export function openEpisodeModal(id: string) {
     <div class="modal-hero">
       ${cv
         ? `<img class="modal-cover" src="${cv}" alt="${ep.title}">`
-        : `<div class="modal-cover-ph">
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1">
-              <circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/>
-            </svg>
-          </div>`}
+        : `<div class="modal-cover-ph"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>`}
     </div>
-
     <div class="modal-body">
       <div class="modal-meta">
         <div class="modal-prog">${ep.program || 'Radio Sintonízate'}</div>
@@ -181,9 +209,13 @@ export function openEpisodeModal(id: string) {
       <h2 class="modal-title">${ep.title}</h2>
       ${ep.description ? `<p class="modal-desc">${ep.description}</p>` : ''}
 
+      <!-- Reactions -->
+      <div class="modal-reactions" id="modal-reactions">
+        <div class="reactions-loading">cargando…</div>
+      </div>
+
       <!-- Built-in player -->
       <div class="modal-player">
-        <!-- Progress bar + time -->
         <div class="modal-progress-row">
           <span class="modal-time" id="modal-tcur">0:00</span>
           <div class="modal-progress-bar" id="modal-progress-bar">
@@ -192,24 +224,19 @@ export function openEpisodeModal(id: string) {
           </div>
           <span class="modal-time" id="modal-ttot">0:00</span>
         </div>
-
-        <!-- Controls -->
         <div class="modal-controls">
           <button class="modal-skip-btn" id="modal-skip-back" aria-label="−15s">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
             <span>15</span>
           </button>
-
           <button class="modal-play-btn" id="modal-ppbtn" data-modal-play="${ep.id}">
             <svg class="modal-play-ico"  width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:${isPlaying ? 'none' : 'block'}"><polygon points="5,3 19,12 5,21"/></svg>
             <svg class="modal-pause-ico" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:${isPlaying ? 'block' : 'none'}"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
-
           <button class="modal-skip-btn" id="modal-skip-fwd" aria-label="+15s">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.51"/></svg>
             <span>15</span>
           </button>
-
           <button class="modal-share-btn" data-modal-share="${ep.id}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             Compartir
@@ -218,50 +245,37 @@ export function openEpisodeModal(id: string) {
       </div>
     </div>`
 
-  // Play/pause
-  inner.getElementById?.('modal-ppbtn')
-  const ppBtn = inner.querySelector<HTMLButtonElement>('#modal-ppbtn')
-  ppBtn?.addEventListener('click', () => {
-    if (id !== curId) {
-      playEp(id)
-    } else {
-      import('./player').then(m => m.togglePlay())
-    }
+  // Wire player controls
+  inner.querySelector<HTMLButtonElement>('#modal-ppbtn')?.addEventListener('click', () => {
+    if (id !== curId) playEp(id)
+    else import('./player').then(m => m.togglePlay())
   })
+  inner.querySelector('#modal-skip-back')?.addEventListener('click', () => skip(-15))
+  inner.querySelector('#modal-skip-fwd') ?.addEventListener('click', () => skip(15))
 
-  // Skip buttons
-  inner.querySelector<HTMLButtonElement>('#modal-skip-back')?.addEventListener('click', () => skip(-15))
-  inner.querySelector<HTMLButtonElement>('#modal-skip-fwd') ?.addEventListener('click', () => skip(15))
-
-  // Seek on progress bar
   const bar = inner.querySelector<HTMLElement>('#modal-progress-bar')
-  bar?.addEventListener('click', (e) => {
+  const seekFn = (clientX: number) => {
     const audEl = document.getElementById('aud') as HTMLAudioElement | null
     if (!audEl?.duration) return
-    const rect = bar.getBoundingClientRect()
-    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    audEl.currentTime = pct * audEl.duration
-  })
+    const rect = bar!.getBoundingClientRect()
+    audEl.currentTime = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * audEl.duration
+  }
+  bar?.addEventListener('click', e => seekFn(e.clientX))
+  bar?.addEventListener('touchstart', e => { seekFn(e.touches[0].clientX); e.preventDefault() }, { passive: false })
 
-  // Touch seek for mobile
-  bar?.addEventListener('touchstart', (e) => {
-    const audEl = document.getElementById('aud') as HTMLAudioElement | null
-    if (!audEl?.duration) return
-    const rect = bar.getBoundingClientRect()
-    const touch = e.touches[0]
-    const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width))
-    audEl.currentTime = pct * audEl.duration
-    e.preventDefault()
-  }, { passive: false })
-
-  // Share
   inner.querySelector<HTMLButtonElement>('[data-modal-share]')?.addEventListener('click', () => shareEp(ep.id))
 
   modal.classList.add('on')
   document.body.style.overflow = 'hidden'
-
-  // Start syncing modal progress
   startModalSync()
+
+  // Load reactions
+  loadReactions(ep.id)
+
+  // Subscribe to live reaction updates
+  reactionUnsub?.()
+  const ch = subscribeToReactions(ep.id, () => loadReactions(ep.id))
+  reactionUnsub = () => ch.unsubscribe()
 }
 
 export function closeEpisodeModal() {
@@ -269,47 +283,71 @@ export function closeEpisodeModal() {
   document.body.style.overflow = ''
   currentModalId = null
   stopModalSync()
+  reactionUnsub?.()
+  reactionUnsub = null
+}
+
+// ── Reactions ─────────────────────────────────────────────────────────────────
+async function loadReactions(episodeId: string) {
+  const counts = await getReactions(episodeId)
+  const el = document.getElementById('modal-reactions')
+  if (!el) return
+
+  el.innerHTML = EMOJIS.map(emoji => {
+    const n = counts[emoji] ?? 0
+    return `<button class="reaction-btn ${n > 0 ? 'has-count' : ''}" data-emoji="${emoji}" data-ep="${episodeId}">
+      <span class="reaction-emoji">${emoji}</span>
+      ${n > 0 ? `<span class="reaction-count">${n}</span>` : ''}
+    </button>`
+  }).join('')
+
+  el.querySelectorAll<HTMLButtonElement>('[data-emoji]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await addReaction(btn.dataset.ep!, btn.dataset.emoji as any)
+      // Optimistic update — bump count immediately
+      const countEl = btn.querySelector<HTMLSpanElement>('.reaction-count')
+      const cur = parseInt(countEl?.textContent ?? '0') || 0
+      if (countEl) { countEl.textContent = String(cur + 1) }
+      else {
+        btn.innerHTML += `<span class="reaction-count">1</span>`
+        btn.classList.add('has-count')
+      }
+      btn.classList.add('reaction-pop')
+      setTimeout(() => btn.classList.remove('reaction-pop'), 400)
+    })
+  })
 }
 
 // ── Modal sync ────────────────────────────────────────────────────────────────
 let modalSyncInterval: ReturnType<typeof setInterval> | null = null
-
 function startModalSync() {
   stopModalSync()
   modalSyncInterval = setInterval(syncModal, 250)
 }
-
 function stopModalSync() {
   if (modalSyncInterval) { clearInterval(modalSyncInterval); modalSyncInterval = null }
 }
-
 function syncModal() {
   if (!currentModalId) return
-  const audEl = document.getElementById('aud') as HTMLAudioElement | null
+  const audEl    = document.getElementById('aud') as HTMLAudioElement | null
   if (!audEl) return
+  const isThis   = currentModalId === curId
+  const nowPlay  = isThis && playing
 
-  const isThis    = currentModalId === curId
-  const nowPlaying = isThis && playing
-
-  // Icons
   const pi  = document.querySelector<SVGElement>('#ep-modal-inner .modal-play-ico')
   const pa  = document.querySelector<SVGElement>('#ep-modal-inner .modal-pause-ico')
-  if (pi && pa) {
-    pi.style.display = nowPlaying ? 'none' : 'block'
-    pa.style.display = nowPlaying ? 'block' : 'none'
-  }
+  if (pi && pa) { pi.style.display = nowPlay ? 'none' : 'block'; pa.style.display = nowPlay ? 'block' : 'none' }
 
-  // Progress
   if (isThis && audEl.duration) {
-    const pct = (audEl.currentTime / audEl.duration) * 100
+    const pct   = (audEl.currentTime / audEl.duration) * 100
     const fill  = document.getElementById('modal-pfill')
     const thumb = document.getElementById('modal-thumb')
     const cur   = document.getElementById('modal-tcur')
     const tot   = document.getElementById('modal-ttot')
-    if (fill)  fill.style.width  = `${pct}%`
-    if (thumb) thumb.style.left  = `${pct}%`
-    if (cur)   cur.textContent   = ft(audEl.currentTime)
-    if (tot)   tot.textContent   = ft(audEl.duration)
+    if (fill)  fill.style.width = `${pct}%`
+    if (thumb) thumb.style.left = `${pct}%`
+    if (cur)   cur.textContent  = ft(audEl.currentTime)
+    if (tot)   tot.textContent  = ft(audEl.duration)
   }
 }
 
@@ -318,22 +356,22 @@ function monthBadge(d: string): string {
   try {
     const date = new Date(d + 'T12:00:00')
     const m = date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '')
-    const y = date.getFullYear()
-    return `<span class="cmonth-badge">${m} ${y}</span>`
+    return `<span class="cmonth-badge">${m} ${date.getFullYear()}</span>`
   } catch { return '' }
 }
-
 function fmtDate(d: string | null): string {
   if (!d) return ''
   try { return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }
   catch { return d }
 }
-
+function fmtDur(secs: number): string {
+  const m = Math.floor(secs / 60), s = Math.floor(secs % 60)
+  return m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}:${String(s).padStart(2,'0')}`
+}
 function ft(s: number): string {
   if (!s || isNaN(s)) return '0:00'
-  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`
 }
-
 function esc(s: string): string {
   return s.replace(/'/g, "\\'").replace(/"/g, '&quot;')
 }
