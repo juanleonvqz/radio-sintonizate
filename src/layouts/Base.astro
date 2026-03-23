@@ -86,7 +86,10 @@ const fullUrl  = Astro.url?.href ?? siteUrl
   <!-- ── THEME — must run before paint to avoid flash ── -->
   <script is:inline>
     (function() {
-      if (localStorage.getItem('rm-theme') === 'dark') {
+      var saved = localStorage.getItem('rm-theme')
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      var isDark = saved ? saved === 'dark' : prefersDark
+      if (isDark) {
         document.documentElement.classList.add('dark-pending')
       } else {
         document.documentElement.classList.add('light-pending')

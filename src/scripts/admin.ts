@@ -288,32 +288,42 @@ export async function deleteEp(id: string) {
 
 // ── Site description (Supabase-backed, global) ────────────────────────────────
 export async function saveDesc() {
-  const val = (document.getElementById('site-desc') as HTMLTextAreaElement)?.value.trim()
+  const val     = (document.getElementById('site-desc') as HTMLTextAreaElement)?.value.trim()
+  const visible = (document.getElementById('banner-toggle') as HTMLInputElement)?.checked ?? true
   if (!val) { toast('Escribe algo primero.'); return }
   const btn = document.getElementById('save-desc-btn') as HTMLButtonElement | null
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando…' }
   try {
     await setSetting('site_description', val)
+    await setSetting('banner_visible', visible ? '1' : '0')
     const body = document.getElementById('desc-body')
     if (body) body.textContent = val
-    toast('¡Descripción actualizada!')
+    const banner = document.getElementById('desc-banner-wrap')
+    if (banner) banner.style.display = visible ? '' : 'none'
+    toast('¡Guardado!')
   } catch (err) {
-    toast('Error al guardar la descripción.')
-    console.error(err)
+    toast('Error al guardar.'); console.error(err)
   }
-  if (btn) { btn.disabled = false; btn.textContent = 'Guardar descripción' }
+  if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios' }
 }
 
 export async function loadSiteDesc() {
   try {
-    const val = await getSetting('site_description')
+    const [val, visible] = await Promise.all([
+      getSetting('site_description'),
+      getSetting('banner_visible'),
+    ])
     if (val) {
       const body = document.getElementById('desc-body')
       if (body) body.textContent = val
     }
-  } catch {
-    // Silently fall back — table may not exist yet
-  }
+    const show   = visible !== '0'
+    const banner = document.getElementById('desc-banner-wrap')
+    if (banner) banner.style.display = show ? '' : 'none'
+    // Sync toggle state when admin opens settings
+    const toggle = document.getElementById('banner-toggle') as HTMLInputElement | null
+    if (toggle) toggle.checked = show
+  } catch { /* table may not exist yet */ }
 }
 
 // ── Manage list ───────────────────────────────────────────────────────────────

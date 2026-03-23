@@ -116,16 +116,7 @@ header::after {
 
 .hright { display: flex; flex-direction: column; align-items: flex-end; gap: .6rem; padding-bottom: 2px; flex-shrink: 0; position: relative; z-index: 1; }
 
-/* Theme toggle */
-#theme-btn {
-  background: none; border: 1px solid rgba(124,63,160,.4); border-radius: 20px;
-  padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px;
-  font-size: 11px; color: rgba(245,166,35,.8); font-family: 'Karla', sans-serif;
-  transition: all .2s; white-space: nowrap; flex-shrink: 0;
-  min-width: 110px; justify-content: center; /* fixed width prevents layout shift */
-}
-#theme-btn:hover { border-color: var(--logo-gold); color: var(--logo-gold); }
-.theme-icon { font-size: 13px; flex-shrink: 0; }
+/* Theme toggle moved to footer */
 
 /* Waveform */
 .wave   { display: flex; align-items: center; gap: 3px; height: 32px; }
@@ -139,12 +130,17 @@ body.audio-playing .wbar { opacity: .6; animation: wanim 1.2s ease-in-out infini
 
 /* Nav */
 nav {
-  max-width: 1200px; margin: 0 auto; padding: .6rem 1.25rem;
+  width: 100%;
+  background: rgba(9, 21, 32, .5);
   border-top: 1px solid rgba(124, 63, 160, .2);
+  position: relative; z-index: 1;
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto; padding: .6rem 1.25rem;
   display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-  position: relative; z-index: 1; background: rgba(9, 21, 32, .5);
   gap: .4rem;
 }
+.nav-inner::-webkit-scrollbar { display: none; }
 nav::-webkit-scrollbar { display: none; }
 .nl {
   font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
@@ -194,14 +190,11 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 .episodes-rest  { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
 
 /* Month badge on card */
-.cmonth { margin-bottom: .3rem; }
+.cmonth { margin-bottom: .2rem; }
 .cmonth-badge {
   display: inline-block;
   font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--logo-purple);
-  background: rgba(124,63,160,.12);
-  padding: 2px 7px; border-radius: 10px;
-  font-weight: 600;
+  color: var(--muted); font-weight: 600;
 }
 
 /* ── EPISODE CARD — horizontal row ── */
@@ -246,8 +239,9 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 
 /* Body — takes remaining width */
 .cbody {
-  padding: .7rem .85rem; flex: 1; min-width: 0;
+  padding: .8rem .9rem; flex: 1; min-width: 0;
   display: flex; flex-direction: column; justify-content: center;
+  min-height: 110px;
 }
 /* Program label — better contrast in both modes */
 .cprog  {
@@ -266,17 +260,28 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 }
 .cdesc {
   font-size: 12px; color: var(--muted); line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cno-desc {
+  font-size: 11px; color: var(--accent); opacity: .6;
+  letter-spacing: .5px;
 }
 .cfoot  { display: flex; align-items: center; gap: .4rem; margin-top: .4rem; }
-.cdate  { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.cdate  { display: none; } /* date shown via month badge at top — no need to repeat */
 /* Tap hint hidden on rows — show only on featured */
 .ctap-hint { display: none; align-items: center; gap: 3px; font-size: 10px; letter-spacing: 1px; color: var(--muted); opacity: .5; }
 .ctap-hint svg { flex-shrink: 0; }
 .cdur {
-  display: none; font-size: 10px; color: var(--muted);
-  background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 10px;
+  display: none; font-size: 11px; color: var(--muted);
   font-variant-numeric: tabular-nums; flex-shrink: 0;
+  align-items: center; gap: 3px;
+}
+.cdur::before {
+  content: '';
+  display: inline-block; width: 11px; height: 11px;
+  background-color: currentColor; flex-shrink: 0;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 .cbtns  { display: flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
 .playbtn {
@@ -431,7 +436,10 @@ footer {
   border-top: 1px solid rgba(124, 63, 160, .35);
   position: relative;
   overflow: hidden;
+  /* Add bottom padding when player is open so Admin/theme aren't hidden */
+  transition: padding-bottom .4s cubic-bezier(.16,1,.3,1);
 }
+body.player-open footer { padding-bottom: calc(68px + var(--sb)); }
 /* Footer always dark navy — override text colors in light mode so they stay readable */
 body.light footer .footer-logo-name { color: #E0D8CC; }
 body.light footer .footer-logo-sub  { color: rgba(160,180,200,.6); }
@@ -553,9 +561,41 @@ body.light .school-logo-img {
   padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.06);
   flex-wrap: wrap; gap: .5rem;
 }
-.footer-copy-row span { font-size: 11px; color: rgba(160,180,200,.4); letter-spacing: .5px; }
+.footer-copy-row > span { font-size: 11px; color: rgba(160,180,200,.4); letter-spacing: .5px; }
+.footer-copy-actions { display: flex; align-items: center; gap: .6rem; }
+/* Theme button in footer */
+#theme-btn {
+  background: none; border: 1px solid rgba(255,255,255,.15); border-radius: 20px;
+  padding: 4px 12px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: rgba(255,255,255,.4); font-family: 'Karla', sans-serif;
+  transition: all .2s; white-space: nowrap; min-width: 110px; justify-content: center;
+}
+#theme-btn:hover { border-color: var(--logo-gold); color: var(--logo-gold); }
+.theme-icon { font-size: 13px; flex-shrink: 0; }
+/* Admin toggle — show/hide banner */
+.admin-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem 0; border-bottom: 1px solid var(--admin-sep);
+  font-size: 13px; color: var(--cream);
+}
+.admin-toggle { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+.admin-toggle input { opacity: 0; width: 0; height: 0; }
+.admin-toggle-slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background: rgba(255,255,255,.15); border-radius: 24px;
+  transition: .2s;
+}
+.admin-toggle-slider::before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; left: 3px; top: 3px;
+  transition: .2s;
+}
+.admin-toggle input:checked + .admin-toggle-slider { background: var(--accent); }
+.admin-toggle input:checked + .admin-toggle-slider::before { transform: translateX(18px); }
 @media (max-width: 480px) {
   .footer-copy-row { flex-direction: column; align-items: center; text-align: center; }
+  .footer-copy-actions { justify-content: center; }
 }
 
 
@@ -858,41 +898,39 @@ body.light .footer-school-logo { filter: none; }
 }
 .btnedit:hover { background: rgba(124,63,160,.1); border-color: var(--logo-purple); }
 
-/* ── SEARCH BAR — inline with header ── */
+/* ── SEARCH BAR — inline with header, more discoverable ── */
 .search-box {
-  display: flex; align-items: center; gap: .4rem;
+  display: flex; align-items: center; gap: .5rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 0 .7rem;
-  transition: border-color .2s, box-shadow .2s;
-  max-width: 200px; width: 100%;
+  padding: 0 .85rem;
+  transition: border-color .2s, box-shadow .2s, max-width .3s;
+  max-width: 180px; width: 100%;
 }
 .search-box:focus-within {
   border-color: var(--border-s);
   box-shadow: 0 0 0 3px rgba(232,160,32,.08);
   max-width: 260px;
 }
-.search-ico { color: var(--muted); flex-shrink: 0; }
+.search-ico { color: var(--accent); flex-shrink: 0; }
 .search-inp {
   flex: 1; background: none; border: none; outline: none;
   font-family: 'Karla', sans-serif; font-size: 13px;
-  color: var(--cream); padding: .55rem 0;
-  min-width: 0;
-  -webkit-appearance: none;
+  color: var(--cream); padding: .6rem 0;
+  min-width: 0; -webkit-appearance: none;
 }
-.search-inp::placeholder { color: var(--muted); }
+.search-inp::placeholder { color: var(--muted); font-style: italic; }
 .search-inp::-webkit-search-cancel-button { display: none; }
 .search-clear {
   background: none; border: none; cursor: pointer;
   color: var(--muted); display: flex; align-items: center;
-  padding: 2px; border-radius: 50%;
-  transition: color .2s; flex-shrink: 0;
+  padding: 2px; border-radius: 50%; transition: color .2s; flex-shrink: 0;
 }
 .search-clear:hover { color: var(--cream); }
 @media (max-width: 400px) {
-  .search-box { max-width: 140px; }
-  .search-box:focus-within { max-width: 180px; }
+  .search-box { max-width: 130px; }
+  .search-box:focus-within { max-width: 170px; }
 }
 
 /* ── NOW PLAYING OVERLAY on card cover ── */
@@ -958,37 +996,53 @@ body.light .footer-school-logo { filter: none; }
   100% { transform: scale(1); }
 }
 
-/* ── FEATURED EPISODE CARD — vertical, full width ── */
+/* ── FEATURED EPISODE CARD — full width, visually rich ── */
 .card-featured {
-  flex-direction: column; /* override row layout */
-  border-color: rgba(124,63,160,.4);
-  box-shadow: 0 4px 20px rgba(0,0,0,.15);
-  min-height: unset;
-}
-.card-featured .cimg-wrap { width: 100%; height: auto; overflow: hidden; align-self: auto; }
-.card-featured .ccover    { width: 100%; height: auto; aspect-ratio: 16/7; object-position: center; position: static; }
-.card-featured .cph       { width: 100%; aspect-ratio: 16/7; height: auto; position: static; }
-.card-featured .cbody     { padding: .9rem; justify-content: flex-start; }
-.card-featured .ctitle    { font-size: 1.15rem; -webkit-line-clamp: 3; margin-bottom: .35rem; }
-.card-featured .cdesc     { -webkit-line-clamp: 2; margin-bottom: .5rem; }
-.card-featured .ctap-hint { display: flex; margin-top: .35rem; }
-.card-featured .cfoot     { margin-top: .75rem; padding-top: .65rem; border-top: 1px solid var(--admin-sep); }
-.card-featured .playbtn   { width: 38px; height: 38px; }
-.card-featured .sharebtn  { width: 32px; height: 32px; }
-
-/* Now playing overlay — sized for row thumbnail */
-.now-playing-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.6);
-  display: none;
   flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 4px;
+  border-color: rgba(124,63,160,.5);
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  min-height: unset; border-radius: 12px; overflow: hidden;
 }
-/* Featured overlay shows label, row overlay shows just bars */
+.card-featured .cimg-wrap { width: 100%; height: auto; overflow: hidden; align-self: auto; position: relative; }
+.card-featured .ccover    { width: 100%; height: auto; aspect-ratio: 16/8; object-fit: cover; object-position: center; position: static; display: block; }
+.card-featured .cph       { width: 100%; aspect-ratio: 16/8; height: auto; position: static; }
+/* Gradient fade from image into card body */
+.card-featured .cimg-wrap::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 55%;
+  background: linear-gradient(to bottom, transparent, var(--bg-card));
+  pointer-events: none;
+}
+.card-featured .cbody  { padding: .4rem 1rem 1rem; justify-content: flex-start; margin-top: -.4rem; position: relative; z-index: 1; }
+.card-featured .cmonth { margin-bottom: .3rem; }
+.card-featured .ctitle { font-size: 1.3rem; -webkit-line-clamp: 2; margin-bottom: .35rem; line-height: 1.25; }
+.card-featured .cdesc  { -webkit-line-clamp: 2; margin-bottom: .3rem; font-size: 13px; }
+.card-featured .cno-desc { font-size: 12px; }
+.card-featured .ctap-hint { display: flex; margin-top: .2rem; }
+.card-featured .cdate  { display: block; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.card-featured .cfoot  { margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--admin-sep); gap: .6rem; }
+.card-featured .playbtn  { width: 40px; height: 40px; }
+.card-featured .sharebtn { width: 34px; height: 34px; }
 .card-featured .now-playing-overlay { gap: 6px; }
 
+/* Now playing overlay */
+.now-playing-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,.6);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+}
+
 .episodes-rest { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
+
+/* Listened state */
+.card-listened { opacity: .65; }
+.card-listened:hover { opacity: 1; }
+.listened-badge {
+  position: absolute; bottom: .45rem; left: .45rem;
+  background: rgba(0,0,0,.65); color: rgba(255,255,255,.7);
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 10px;
+  font-family: 'Karla', sans-serif; font-weight: 600;
+  backdrop-filter: blur(4px);
+}
 
 .featured-badge {
   position: absolute; top: .6rem; left: .6rem;

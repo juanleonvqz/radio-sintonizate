@@ -9,6 +9,16 @@ let searchQ   = ''
 let currentModalId: string | null = null
 let reactionUnsub: (() => void) | null = null
 
+// ── Listened tracking ─────────────────────────────────────────────────────────
+function getListened(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem('rm-listened') || '[]')) }
+  catch { return new Set() }
+}
+function markListened(id: string) {
+  const s = getListened(); s.add(id)
+  localStorage.setItem('rm-listened', JSON.stringify([...s]))
+}
+
 export function renderAll() {
   renderNav()
   renderGrid()
@@ -77,7 +87,10 @@ function renderGrid() {
     )
   }
 
-  if (countEl) countEl.textContent = `${eps.length} episodio${eps.length !== 1 ? 's' : ''}`
+  const total    = filtered.length
+  if (countEl) countEl.textContent = searchQ || activeF !== 'all'
+    ? `${total} de ${eps.length} episodio${eps.length !== 1 ? 's' : ''}`
+    : `${eps.length} episodio${eps.length !== 1 ? 's' : ''}`
 
   if (!filtered.length) {
     grid.innerHTML = `<div class="state-box">
@@ -97,6 +110,8 @@ function renderGrid() {
     return
   }
 
+  const listened = getListened()
+
   const sorted = [...filtered].sort((a, b) => {
     if (!a.date && !b.date) return 0
     if (!a.date) return 1; if (!b.date) return -1
@@ -108,11 +123,12 @@ function renderGrid() {
   const [featured, ...rest] = showFeatured ? sorted : [null, ...sorted]
 
   const makeCard = (ep: Episode, isFeatured = false) => {
-    const cv       = coverUrl(ep.cover_path)
+    const cv        = coverUrl(ep.cover_path)
     const isPlaying = ep.id === curId && playing
     const isPaused  = ep.id === curId && !playing && !!curId
+    const isDone    = listened.has(ep.id)
 
-    return `<div class="card ${isFeatured ? 'card-featured' : ''} ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''}" id="card-${ep.id}" data-id="${ep.id}">
+    return `<div class="card ${isFeatured ? 'card-featured' : ''} ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''} ${isDone ? 'card-listened' : ''}" id="card-${ep.id}" data-id="${ep.id}">
       <div class="cimg-wrap">
         ${cv
           ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="${isFeatured ? 'eager' : 'lazy'}">`
@@ -122,12 +138,16 @@ function renderGrid() {
           <span class="np-lbl">Reproduciendo</span>
         </div>
         ${isFeatured ? `<div class="featured-badge">Último episodio</div>` : ''}
+        ${isDone && !isFeatured ? `<div class="listened-badge">✓ Escuchado</div>` : ''}
       </div>
       <div class="cbody">
         ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
         <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
         <div class="ctitle">${ep.title}</div>
-        ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
+        ${ep.description
+          ? `<div class="cdesc">${ep.description}</div>`
+          : ''}
+        <div class="cno-desc">Escuchar episodio →</div>
         <div class="ctap-hint">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Toca para ver más
@@ -149,6 +169,7 @@ function renderGrid() {
     </div>`
   }
 
+  // Featured latest + rest as rows
   grid.innerHTML = `<div class="episodes-flat">
     ${featured ? makeCard(featured, true) : ''}
     ${rest.length ? `<div class="episodes-rest">${rest.map(ep => makeCard(ep)).join('')}</div>` : ''}
@@ -165,11 +186,10 @@ function renderGrid() {
     btn.addEventListener('click', e => {
       e.stopPropagation()
       const id = btn.dataset.play!
+      markListened(id)
       if (id === curId) {
-        // Same episode — toggle play/pause
         import('./player').then(m => m.togglePlay())
       } else {
-        // Different episode — start playing it
         playEp(id)
       }
     })
@@ -209,7 +229,7 @@ async function loadDurations(episodes: Episode[]) {
     if (!el) continue
     try {
       const secs = await getAudioDuration(audioUrl(ep.audio_path))
-      if (secs > 0) { el.textContent = fmtDur(secs); el.style.display = 'inline' }
+      if (secs > 0) { el.textContent = fmtDur(secs); el.style.display = 'flex' }
     } catch { /* silent */ }
   }
 }
@@ -386,13 +406,19 @@ function syncModal() {
 function monthBadge(d: string): string {
   try {
     const date = new Date(d + 'T12:00:00')
-    const m = date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '')
-    return `<span class="cmonth-badge">${m} ${date.getFullYear()}</span>`
+    // "Diciembre 2025" — full month, capitalized
+    const m = date.toLocaleDateString('es-ES', { month: 'long' })
+    const capitalized = m.charAt(0).toUpperCase() + m.slice(1)
+    return `<span class="cmonth-badge">${capitalized} ${date.getFullYear()}</span>`
   } catch { return '' }
 }
 function fmtDate(d: string | null): string {
   if (!d) return ''
-  try { return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) }
+  try {
+    return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    }).replace('.', '')
+  }
   catch { return d }
 }
 function fmtDur(secs: number): string {

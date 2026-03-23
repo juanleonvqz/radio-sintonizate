@@ -29,6 +29,12 @@ export function toggleTheme() {
 }
 
 export function initTheme() {
-  // Default is light mode — only go dark if user explicitly chose dark
-  applyTheme(localStorage.getItem('rm-theme') !== 'dark')
+  // If user has explicitly chosen a theme, respect that
+  // Otherwise follow the device's system preference (dark/light mode)
+  const saved = localStorage.getItem('rm-theme')
+  if (saved) {
+    applyTheme(saved === 'light')
+  } else {
+    applyTheme(!window.matchMedia('(prefers-color-scheme: dark)').matches)
+  }
 }

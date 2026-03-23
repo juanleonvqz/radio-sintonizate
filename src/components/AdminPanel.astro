@@ -100,12 +100,22 @@
       <!-- ── TAB: SETTINGS ── -->
       <div class="admin-tab-content" id="tab-settings">
         <div class="mgsec" style="margin-top:0;padding-top:0;border-top:none">
-          <h3 style="margin-bottom:.9rem">Descripción del sitio</h3>
-          <div class="fg" style="margin-bottom:.75rem">
-            <label>Texto de bienvenida</label>
+
+          <!-- Banner visibility toggle -->
+          <h3 style="margin-bottom:.75rem">Texto de bienvenida</h3>
+          <div class="admin-toggle-row">
+            <span>Mostrar banner de bienvenida</span>
+            <label class="admin-toggle">
+              <input type="checkbox" id="banner-toggle" checked />
+              <span class="admin-toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="fg" style="margin-bottom:.75rem;margin-top:.9rem">
+            <label>Texto</label>
             <textarea class="fc" id="site-desc" rows="5" placeholder="Escribe aquí la descripción pública de la radio…"></textarea>
           </div>
-          <button class="btnp" id="save-desc-btn">Guardar descripción</button>
+          <button class="btnp" id="save-desc-btn">Guardar cambios</button>
         </div>
       </div>
 
