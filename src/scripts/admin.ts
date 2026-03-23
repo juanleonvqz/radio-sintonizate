@@ -139,7 +139,7 @@ export async function publish() {
     let coverPath: string | null = null
     if (pendCoverBlob) {
       if (btn) btn.textContent = 'Subiendo portada…'
-      coverPath = `${ts}-cover.jpg`
+      coverPath = `${ts}-cover.webp`
       try { await uploadCover(coverPath, pendCoverBlob) } catch (e) { console.warn(e) }
     }
 
@@ -248,7 +248,7 @@ export async function saveEdit() {
     // Upload new cover if provided
     if (editCoverBlob) {
       if (btn) btn.textContent = 'Subiendo portada…'
-      const coverPath = `${Date.now()}-cover.jpg`
+      const coverPath = `${Date.now()}-cover.webp`
       await uploadCover(coverPath, editCoverBlob)
       updates.cover_path = coverPath
     }
@@ -373,7 +373,8 @@ function resizeImage(file: File, cb: (blob: Blob) => void) {
       if (w > MAX) { h = Math.round(h * MAX / w); w = MAX }
       canvas.width = w; canvas.height = h
       canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => { if (blob) cb(blob) }, 'image/jpeg', 0.82)
+      // WebP saves ~30% file size vs JPEG at same visual quality
+      canvas.toBlob(blob => { if (blob) cb(blob) }, 'image/webp', 0.85)
     }
     img.src = ev.target!.result as string
   }

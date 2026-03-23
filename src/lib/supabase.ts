@@ -91,7 +91,7 @@ export async function uploadAudio(path: string, file: File): Promise<void> {
 }
 
 export async function uploadCover(path: string, blob: Blob): Promise<void> {
-  const { error } = await sb.storage.from('covers').upload(path, blob, { contentType: 'image/jpeg' })
+  const { error } = await sb.storage.from('covers').upload(path, blob, { contentType: 'image/webp' })
   if (error) throw error
 }
 
@@ -152,7 +152,7 @@ export function getAudioDuration(url: string): Promise<number> {
 
 // ── Emoji reactions ───────────────────────────────────────────────────────────
 
-export const EMOJIS = ['👏', '❤️', '🔥'] as const
+export const EMOJIS = ['👏', '❤️', '🎙️', '🔥', '😂'] as const
 export type Emoji = typeof EMOJIS[number]
 
 export interface ReactionCounts {
