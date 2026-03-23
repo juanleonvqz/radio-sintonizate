@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Block admin overlay and API endpoints from indexing
+Disallow: /api/
+
+Sitemap: https://radiosintonizate.com/sitemap-index.xml
