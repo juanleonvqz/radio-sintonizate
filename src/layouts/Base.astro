@@ -59,10 +59,15 @@ const fullUrl  = Astro.url?.href ?? siteUrl
 
   <!-- ── CANONICAL ── -->
   <link rel="canonical" href={siteUrl} />
+  <link rel="sitemap"   href="/sitemap-index.xml" />
 
   <!-- ── DNS PREFETCH — resolves Supabase DNS early ── -->
   <link rel="dns-prefetch" href="https://vyjftrivoolvmfkopogh.supabase.co" />
   <link rel="preconnect"   href="https://vyjftrivoolvmfkopogh.supabase.co" />
+
+  <!-- ── PRELOAD key images — browser fetches them immediately ── -->
+  <link rel="preload" as="image" href="/logos/Logo_radio_sintonizate_White.jpg" />
+  <link rel="preload" as="image" href="/logos/Logo_IES_ELMayorazgo_White.png" />
 
   <!-- ── FONTS ── -->
   <!-- Option A (default): Google Fonts CDN — easy, no setup needed -->
