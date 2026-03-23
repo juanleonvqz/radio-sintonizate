@@ -1,6 +1,8 @@
 ---
-// Default text — overridden at runtime by admin via localStorage
-const defaultText = 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife. Aquí encontrarás todos nuestros programas, podcasts y emisiones. ¡Sintonízanos y forma parte de nuestra comunidad!'
+// Default text — overridden by admin via Supabase site_settings
+// Use \n in the Supabase value for line breaks — white-space:pre-line renders them
+const line1 = 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife. Aquí encontrarás todos nuestros programas, podcasts y emisiones.'
+const line2 = '¡Sintonízanos y forma parte de nuestra comunidad!'
 ---
 
 <div class="desc-banner">
@@ -13,6 +15,7 @@ const defaultText = 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife
   </div>
   <div class="desc-text">
     <div class="desc-title">Bienvenidos a Radio Sintonízate</div>
-    <div class="desc-body" id="desc-body">{defaultText}</div>
+    <div class="desc-body" id="desc-body">{line1}
+{line2}</div>
   </div>
 </div>

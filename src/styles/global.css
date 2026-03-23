@@ -167,7 +167,7 @@ nav::-webkit-scrollbar { display: none; }
   flex-shrink: 0; margin-top: 1px;
 }
 .desc-title { font-family: 'Playfair Display', serif; font-size: .95rem; color: var(--cream); margin-bottom: .3rem; }
-.desc-body  { font-size: 14px; color: var(--muted); line-height: 1.65; }
+.desc-body  { font-size: 14px; color: var(--muted); line-height: 1.65; white-space: pre-line; }
 
 /* ── MAIN ── */
 main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem; padding-bottom: calc(90px + var(--sb) + 4rem); }
@@ -404,11 +404,8 @@ footer {
 /* Footer always dark navy — override text colors in light mode so they stay readable */
 body.light footer .footer-logo-name { color: #E0D8CC; }
 body.light footer .footer-logo-sub  { color: rgba(160,180,200,.6); }
-body.light footer .footer-contact   { color: #A0B4C8; }
-body.light footer .footer-contact a { color: #F5A623; }
-body.light footer .footer-copy      { color: rgba(160,180,200,.5); }
-body.light footer .flink            { color: rgba(160,180,200,.7); border-color: rgba(160,180,200,.2); }
-body.light footer .flink:hover      { color: #F5A623; border-color: #F5A623; }
+body.light footer .footer-copy      { color: rgba(160,180,200,.4); }
+body.light footer .footer-admin-btn { color: rgba(255,255,255,.25); }
 /* Subtle glow like the header */
 footer::before {
   content: ''; position: absolute; bottom: -40px; left: -60px;
@@ -486,12 +483,63 @@ body.light .school-logo-img {
 .flink:hover  { border-color: var(--accent); color: var(--accent); }
 .flink svg    { flex-shrink: 0; }
 
-/* Bottom */
-.footer-bottom { display: flex; flex-direction: column; gap: .35rem; }
-.footer-contact   { font-size: 12px; color: var(--muted); line-height: 1.7; }
-.footer-contact a { color: var(--accent); text-decoration: none; }
-.footer-contact a:hover { text-decoration: underline; }
-.footer-copy { font-size: 11px; color: var(--muted); opacity: .5; letter-spacing: .5px; }
+/* ── FOOTER COLUMNS ── */
+.footer-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+@media (max-width: 640px) {
+  .footer-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}
+@media (max-width: 380px) {
+  .footer-columns { grid-template-columns: 1fr; }
+}
+.footer-col-title {
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--logo-gold); font-weight: 600;
+  margin-bottom: .75rem;
+}
+.footer-col-body {
+  display: flex; flex-direction: column; gap: .55rem;
+}
+.footer-col-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: rgba(180,200,220,.7); line-height: 1.55;
+}
+.footer-col-item svg { flex-shrink: 0; margin-top: 1px; opacity: .6; }
+.footer-col-item a {
+  color: rgba(180,200,220,.7); text-decoration: none; transition: color .2s;
+}
+.footer-col-item a:hover { color: var(--logo-gold); }
+.footer-col-link {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: rgba(180,200,220,.7);
+  text-decoration: none; transition: color .2s; line-height: 1.55;
+}
+.footer-col-link svg { flex-shrink: 0; opacity: .6; }
+.footer-col-link:hover { color: var(--logo-gold); }
+.footer-col-desc {
+  font-size: 12px; color: rgba(180,200,220,.6); line-height: 1.65;
+}
+
+/* Bottom row — centered on mobile */
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding-top: 1.25rem;
+  flex-wrap: wrap; gap: .5rem;
+}
+@media (max-width: 480px) {
+  .footer-bottom {
+    flex-direction: column; align-items: center;
+    text-align: center; gap: .75rem;
+  }
+}
+.footer-copy { font-size: 11px; color: rgba(160,180,200,.4); letter-spacing: .5px; }
 
 /* ── TOAST ── */
 #toast    { position: fixed; bottom: calc(var(--sb) + 5.5rem); left: 50%; transform: translateX(-50%) translateY(12px); background: var(--accent); color: #0C0906; padding: 9px 20px; border-radius: 3px; font-size: 13px; font-weight: 600; opacity: 0; transition: all .3s; z-index: 400; pointer-events: none; white-space: nowrap; max-width: 88vw; text-align: center; }
