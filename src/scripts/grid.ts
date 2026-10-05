@@ -3,6 +3,7 @@ import type { ReactionCounts } from '../lib/supabase'
 import { eps, curId, playing, playEp, skip } from './player'
 import { shareEp } from './share'
 import type { Episode } from '../lib/types'
+import { escapeHtml } from '../lib/html'
 
 let activeF   = 'all'
 let searchQ   = ''
@@ -64,7 +65,7 @@ function renderNav() {
   if (!nav) return
   nav.innerHTML = `<button class="nl ${activeF === 'all' ? 'on' : ''}" data-filter="all">Todos</button>`
   progs.forEach(p => {
-    nav.innerHTML += `<button class="nl ${activeF === p ? 'on' : ''}" data-filter="${esc(p!)}">${p}</button>`
+    nav.innerHTML += `<button class="nl ${activeF === p ? 'on' : ''}" data-filter="${escapeHtml(p)}">${escapeHtml(p)}</button>`
   })
   nav.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter!, btn))
@@ -102,7 +103,7 @@ function renderGrid() {
       </div>
       <h3>${searchQ ? 'Sin resultados' : eps.length ? 'Sin episodios aquí' : '¡Próximamente!'}</h3>
       <p>${searchQ
-        ? `No hay episodios que coincidan con "<strong>${searchQ}</strong>". Prueba con otro término.`
+        ? `No hay episodios que coincidan con "<strong>${escapeHtml(searchQ)}</strong>". Prueba con otro término.`
         : eps.length
           ? 'No hay episodios en este programa todavía.'
           : 'El equipo de Radio Sintonízate está preparando los primeros episodios. ¡Vuelve pronto!'
@@ -132,7 +133,7 @@ function renderGrid() {
     return `<div class="card ${isFeatured ? 'card-featured' : ''} ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''} ${isDone ? 'card-listened' : ''}" id="card-${ep.id}" data-id="${ep.id}">
       <div class="cimg-wrap">
         ${cv
-          ? `<img class="ccover" src="${cv}" alt="${ep.title}" loading="${isFeatured ? 'eager' : 'lazy'}">`
+          ? `<img class="ccover" src="${cv}" alt="${escapeHtml(ep.title)}" loading="${isFeatured ? 'eager' : 'lazy'}">`
           : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
         <div class="now-playing-overlay" style="display:${isPlaying ? 'flex' : 'none'}">
           <div class="np-bars"><span></span><span></span><span></span><span></span></div>
@@ -142,9 +143,9 @@ function renderGrid() {
       </div>
       <div class="cbody">
         ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
-        <div class="cprog">${ep.program || 'Radio Sintonízate'}</div>
-        <div class="ctitle">${ep.title}</div>
-        ${ep.description ? `<div class="cdesc">${ep.description}</div>` : ''}
+        <div class="cprog">${escapeHtml(ep.program) || 'Radio Sintonízate'}</div>
+        <div class="ctitle">${escapeHtml(ep.title)}</div>
+        ${ep.description ? `<div class="cdesc">${escapeHtml(ep.description)}</div>` : ''}
         ${!isDone ? `<div class="cno-desc">Escuchar episodio →</div>` : ''}
         <div class="ctap-hint">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -250,16 +251,16 @@ export function openEpisodeModal(id: string) {
   inner.innerHTML = `
     <div class="modal-hero">
       ${cv
-        ? `<img class="modal-cover" src="${cv}" alt="${ep.title}">`
+        ? `<img class="modal-cover" src="${cv}" alt="${escapeHtml(ep.title)}">`
         : `<div class="modal-cover-ph"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/></svg></div>`}
     </div>
     <div class="modal-body">
       <div class="modal-meta">
-        <div class="modal-prog">${ep.program || 'Radio Sintonízate'}</div>
+        <div class="modal-prog">${escapeHtml(ep.program) || 'Radio Sintonízate'}</div>
         ${ep.date ? `<div class="modal-date">${fmtDate(ep.date)}</div>` : ''}
       </div>
-      <h2 class="modal-title">${ep.title}</h2>
-      ${ep.description ? `<p class="modal-desc">${ep.description}</p>` : ''}
+      <h2 class="modal-title">${escapeHtml(ep.title)}</h2>
+      ${ep.description ? `<p class="modal-desc">${escapeHtml(ep.description)}</p>` : ''}
 
       <!-- Reactions + comment icon row -->
       <div class="modal-reactions-row">
@@ -526,10 +527,10 @@ async function loadComments(episodeId: string) {
     const date = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     return `<div class="comment-item">
       <div class="comment-meta">
-        <span class="comment-author">${c.author}</span>
+        <span class="comment-author">${escapeHtml(c.author)}</span>
         <span class="comment-date">${date}</span>
       </div>
-      <div class="comment-body">${c.body}</div>
+      <div class="comment-body">${escapeHtml(c.body)}</div>
     </div>`
   }).join('')
 }
@@ -591,7 +592,4 @@ function fmtDur(secs: number): string {
 function ft(s: number): string {
   if (!s || isNaN(s)) return '0:00'
   return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`
-}
-function esc(s: string): string {
-  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;')
 }

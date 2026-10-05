@@ -10,6 +10,7 @@ import { setEps, eps } from './player'
 import { renderAll } from './grid'
 import { toast } from './player'
 import type { Episode } from '../lib/types'
+import { escapeHtml } from '../lib/html'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let pendCoverBlob: Blob | null = null
@@ -349,8 +350,8 @@ export function renderManage() {
         ? `<img class="mgth" src="${cv}" alt="">`
         : `<div class="mgthph"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>`}
       <div class="mginf">
-        <div class="mgttl">${ep.title}</div>
-        <div class="mgprog">${ep.program || 'Sin programa'} · ${fmtDate(ep.date)}</div>
+        <div class="mgttl">${escapeHtml(ep.title)}</div>
+        <div class="mgprog">${escapeHtml(ep.program) || 'Sin programa'} · ${fmtDate(ep.date)}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button class="btnedit" data-edit="${ep.id}">Editar</button>
@@ -398,11 +399,11 @@ export async function renderComments() {
     const date  = new Date(c.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     return `<div class="admin-comment-item" id="ac-${c.id}">
       <div class="admin-comment-meta">
-        <span class="admin-comment-author">${c.author}</span>
-        <span class="admin-comment-ep">${ep?.title ?? 'Episodio desconocido'}</span>
+        <span class="admin-comment-author">${escapeHtml(c.author)}</span>
+        <span class="admin-comment-ep">${escapeHtml(ep?.title) || 'Episodio desconocido'}</span>
         <span class="admin-comment-date">${date}</span>
       </div>
-      <div class="admin-comment-body">${c.body}</div>
+      <div class="admin-comment-body">${escapeHtml(c.body)}</div>
       <div class="admin-comment-actions">
         <button class="btnp admin-approve-btn" data-approve="${c.id}">✓ Aprobar</button>
         <button class="btndel" data-reject="${c.id}">✕ Rechazar</button>
