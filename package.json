@@ -6,7 +6,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "supabase:export": "node scripts/supabase-export.mjs",
+    "d1:import-sql": "node scripts/d1-import-sql.mjs",
+    "r2:upload": "node scripts/r2-upload.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.0.0",
@@ -16,6 +19,7 @@
     "bcryptjs": "^3.0.3"
   },
   "devDependencies": {
+    "pg": "^8.23.1",
     "vitest": "^5.0.3"
   }
 }
