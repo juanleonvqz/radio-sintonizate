@@ -1,5 +1,6 @@
 import type { APIContext } from 'astro'
 import type { Db } from './db'
+import type { Bucket } from './media/bucket'
 
 // Small helpers shared by the API endpoints.
 
@@ -15,6 +16,12 @@ export function json(body: unknown, status = 200, headers: Record<string, string
 export function database(context: APIContext): Db | null {
   const runtime = (context.locals as { runtime?: { env?: { DB?: Db } } }).runtime
   return runtime?.env?.DB ?? null
+}
+
+// The file bucket binding, or null where the Pages project has none yet.
+export function mediaBucket(context: APIContext): Bucket | null {
+  const runtime = (context.locals as { runtime?: { env?: { MEDIA?: Bucket } } }).runtime
+  return runtime?.env?.MEDIA ?? null
 }
 
 export const notConfigured = () => json({ error: 'not_configured' }, 503)
