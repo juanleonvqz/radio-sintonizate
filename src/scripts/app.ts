@@ -4,13 +4,13 @@
  * Responsibilities:
  *  1. Init theme (before paint to avoid flash)
  *  2. Wire all DOM event listeners
- *  3. Load episodes from Supabase
+ *  3. Load episodes from the API
  *  4. Start realtime subscription
  *  5. Check deep-link (?ep=)
  *  6. Set up PWA
  */
 
-import { fetchEpisodes, subscribeToEpisodes, subscribeToSettings } from '../lib/supabase'
+import { fetchEpisodes, subscribeToEpisodes, subscribeToSettings } from '../lib/api'
 import { initTheme, toggleTheme }             from './theme'
 import { initPlayer, togglePlay, skip, seekMini, closePlayer, scrollToCard, setEps, eps } from './player'
 import { renderAll, closeEpisodeModal, initSearch } from './grid'
@@ -166,14 +166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       grid.innerHTML = `<div class="state-box">
         <div class="state-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/></svg></div>
         <h3>${isTimeout ? 'Tiempo de espera agotado' : 'Error de conexión'}</h3>
-        <p>${isTimeout ? 'Supabase no responde. Revisa PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en .env' : err.message}</p>
+        <p>${isTimeout ? 'El servidor no responde. Inténtalo de nuevo en un momento.' : err.message}</p>
       </div>`
     }
   }
 
   // ── Realtime — re-render on any episode change ────────────────────────────
   subscribeToEpisodes(async () => {
-    const { fetchEpisodes: reload } = await import('../lib/supabase')
+    const { fetchEpisodes: reload } = await import('../lib/api')
     const data = await reload()
     setEps(data)
     renderAll()
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Realtime — update site description when admin changes it ──────────────
   subscribeToSettings(async () => {
-    const { getSetting } = await import('../lib/supabase')
+    const { getSetting } = await import('../lib/api')
     const val = await getSetting('site_description')
     if (val) {
       const body = document.getElementById('desc-body')

@@ -1,11 +1,10 @@
-import {
-  sb, signIn, signOut, getSession,
+import { signIn, signOut, getSession,
   uploadAudio, uploadCover,
   insertEpisode, updateEpisode, deleteEpisode,
   fetchEpisodes, coverUrl,
   getSetting, setSetting,
   getPendingComments, approveComment, rejectComment
-} from '../lib/supabase'
+} from '../lib/api'
 import { setEps, eps } from './player'
 import { renderAll } from './grid'
 import { toast } from './player'
@@ -290,7 +289,7 @@ export async function deleteEp(id: string) {
   } catch (err) { toast('Error al eliminar.'); console.error(err) }
 }
 
-// ── Site description (Supabase-backed, global) ────────────────────────────────
+// ── Site description (stored on the server, global) ────────────────────────────────
 export async function saveDesc() {
   const val     = (document.getElementById('site-desc') as HTMLTextAreaElement)?.value.trim()
   const visible = (document.getElementById('banner-toggle') as HTMLInputElement)?.checked ?? true

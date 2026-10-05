@@ -1,4 +1,4 @@
-import { coverUrl, audioUrl } from '../lib/supabase'
+import { coverUrl, audioUrl } from '../lib/api'
 import { eps, toast }         from './player'
 import type { Episode }       from '../lib/types'
 

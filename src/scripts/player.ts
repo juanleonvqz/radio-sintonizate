@@ -1,4 +1,4 @@
-import { sb, coverUrl, audioUrl, fetchEpisodeById } from '../lib/supabase'
+import { coverUrl, audioUrl, fetchEpisodeById } from '../lib/api'
 import type { Episode } from '../lib/types'
 
 // ── State ─────────────────────────────────────────────────────────────────────

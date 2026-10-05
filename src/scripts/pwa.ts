@@ -63,7 +63,7 @@ export function setupPWA() {
     const sw = `const C='rs-v2';
 self.addEventListener('install',e=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim()});
-self.addEventListener('fetch',e=>{if(e.request.url.includes('supabase'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`
+self.addEventListener('fetch',e=>{if(e.request.url.includes('/api/')||e.request.url.includes('/media/'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`
     navigator.serviceWorker
       .register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' })), { scope: './' })
       .catch(() => {})

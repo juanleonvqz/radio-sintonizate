@@ -107,6 +107,12 @@ describe('audio: auth upload and covers: auth upload', () => {
     expect(media.files.size).toBe(2)
   })
 
+  it('keeps nothing when fewer bytes arrive than announced', async () => {
+    const { status } = await put('cut.mp3', { token: admin, headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': '5000' } })
+    expect(status).toBe(400)
+    expect(media.files.has('audio/cut.mp3')).toBe(false)
+  })
+
   it('works out the type from the extension when the browser sends none', async () => {
     expect(uploadType('audio', 'a.m4a', null)).toBe('audio/x-m4a')
     expect(uploadType('audio', 'a.MP3', '')).toBe('audio/mpeg')

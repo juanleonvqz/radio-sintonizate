@@ -1,45 +1,32 @@
 /**
- * /feed.xml — server-rendered RSS podcast feed
+ * /feed.xml: the podcast feed, rendered on the server from the site's own database.
  *
- * Runs on Cloudflare Pages edge via @astrojs/cloudflare adapter.
  * Submit https://radiosintonizate.com/feed.xml to:
- *   Spotify for Podcasters → podcasters.spotify.com
- *   Apple Podcasts Connect → podcastsconnect.apple.com
+ *   Spotify for Podcasters, podcasters.spotify.com
+ *   Apple Podcasts Connect, podcastsconnect.apple.com
  */
 
 import type { APIRoute } from 'astro'
+import { database, mediaBucket } from '../server/http'
+import { listEpisodes } from '../server/content/episodes'
+import { fileKey } from '../server/media/bucket'
 
 const SITE_URL = 'https://radiosintonizate.com'
 
-export const GET: APIRoute = async () => {
-  const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL
-  const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+export const GET: APIRoute = async (context) => {
+  const db    = database(context)
+  const media = mediaBucket(context)
+  if (!db || !media) return new Response('Not configured', { status: 503 })
 
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return new Response('Missing env vars: PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY', { status: 500 })
-  }
+  const episodes = await listEpisodes(db)
 
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/episodes?select=*&order=created_at.desc`,
-    {
-      headers: {
-        apikey:        SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    }
-  )
+  // Podcast apps want each file's real size and type.
+  const files = await Promise.all(episodes.map(ep =>
+    media.head(fileKey('audio', ep.audio_path) ?? '').catch(() => null)
+  ))
 
-  if (!res.ok) {
-    return new Response(`Supabase error: ${res.status}`, { status: 502 })
-  }
-
-  const episodes: any[] = await res.json()
-
-  const coverUrl = (path: string | null) =>
-    path ? `${SUPABASE_URL}/storage/v1/object/public/covers/${path}` : null
-
-  const audioUrl = (path: string) =>
-    `${SUPABASE_URL}/storage/v1/object/public/audio/${path}`
+  const coverUrl = (path: string | null) => (path ? `${SITE_URL}/media/covers/${encodeURIComponent(path)}` : null)
+  const audioUrl = (path: string) => `${SITE_URL}/media/audio/${encodeURIComponent(path)}`
 
   const safeDate = (d: string | null) => {
     try { return d ? new Date(d + 'T12:00:00').toUTCString() : new Date().toUTCString() }
@@ -47,8 +34,8 @@ export const GET: APIRoute = async () => {
   }
 
   const items = episodes.map((ep, i) => {
-    const cv    = coverUrl(ep.cover_path)
-    const audio = audioUrl(ep.audio_path)
+    const cv   = coverUrl(ep.cover_path)
+    const file = files[i]
     return `
     <item>
       <title><![CDATA[${ep.title}]]></title>
@@ -57,9 +44,9 @@ export const GET: APIRoute = async () => {
       <content:encoded><![CDATA[${ep.description || ep.title}]]></content:encoded>
       <itunes:title><![CDATA[${ep.title}]]></itunes:title>
       <itunes:summary><![CDATA[${ep.description || ep.title}]]></itunes:summary>
-      <itunes:author>Radio Sintonízate — IES El Mayorazgo</itunes:author>
+      <itunes:author>Radio Sintonízate, IES El Mayorazgo</itunes:author>
       ${cv ? `<itunes:image href="${cv}"/>` : ''}
-      <enclosure url="${audio}" type="audio/mpeg" length="0"/>
+      <enclosure url="${audioUrl(ep.audio_path)}" type="${file?.httpMetadata?.contentType ?? 'audio/mpeg'}" length="${file?.size ?? 0}"/>
       <guid isPermaLink="false">${ep.id}</guid>
       <pubDate>${safeDate(ep.date)}</pubDate>
       <itunes:episode>${episodes.length - i}</itunes:episode>
