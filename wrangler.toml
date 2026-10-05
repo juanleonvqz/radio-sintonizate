@@ -1,0 +1,20 @@
+# For the wrangler CLI and local development only.
+#
+# Cloudflare Pages reads this file only when it contains `pages_build_output_dir`. It
+# does not, on purpose: the deployed site keeps taking its variables and bindings from
+# the Pages project settings, and adding that key here would silently replace them.
+
+name = "radio-sintonizate"
+compatibility_date = "2026-03-22"
+
+# EU jurisdiction: both are stored and run inside the EU.
+[[d1_databases]]
+binding = "DB"
+database_name = "radio-sintonizate"
+database_id = "58481cfb-f1ac-415e-a151-49c3a7192828"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "radio-sintonizate-media"
+jurisdiction = "eu"
