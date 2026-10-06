@@ -73,8 +73,8 @@ export const GET: APIRoute = async (context) => {
     <itunes:subtitle>La Radio del IES El Mayorazgo</itunes:subtitle>
     <itunes:summary>Programas, podcasts y emisiones del IES El Mayorazgo, La Orotava, Tenerife.</itunes:summary>
     <itunes:owner>
-      <itunes:name>IES El Mayorazgo</itunes:name>
-      <itunes:email>38010979@gobiernodecanarias.org</itunes:email>
+      <itunes:name>Ofelia Martín, IES El Mayorazgo</itunes:name>
+      <itunes:email>ofeliamartinv@gmail.com</itunes:email>
     </itunes:owner>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
