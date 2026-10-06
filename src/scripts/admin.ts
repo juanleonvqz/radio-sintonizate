@@ -3,7 +3,7 @@ import { signIn, signOut, getSession,
   insertEpisode, updateEpisode, deleteEpisode,
   fetchEpisodes, coverUrl,
   getSetting, setSetting,
-  getPendingComments, approveComment, rejectComment
+  getPendingComments, approveComment, rejectComment, explainError
 } from '../lib/api'
 import { setEps, eps } from './player'
 import { renderAll } from './grid'
@@ -161,7 +161,7 @@ export async function publish() {
     switchTab('manage')
     toast('¡Episodio publicado!')
   } catch (err) {
-    toast('Error al publicar. Revisa la consola.')
+    toast(`Error al publicar: ${explainError(err)}.`)
     console.error(err)
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Publicar episodio' }
@@ -271,7 +271,7 @@ export async function saveEdit() {
     closeEditPanel()
     toast('¡Episodio actualizado!')
   } catch (err) {
-    toast('Error al guardar. Revisa la consola.')
+    toast(`Error al guardar: ${explainError(err)}.`)
     console.error(err)
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios' }

@@ -87,14 +87,49 @@ export async function uploadCover(path: string, blob: Blob): Promise<void> {
   await upload('covers', path, blob, 'image/webp')
 }
 
+// A connection that drops mid-upload is tried again, up to three times. The name stays
+// the same, so if the first try did land the retry is told "exists" and checks the
+// stored size instead of giving up.
 async function upload(folder: 'audio' | 'covers', path: string, body: Blob, type: string): Promise<void> {
-  // With no declared type the server works one out from the file name.
-  const response = await fetch(`/api/media/${folder}/${encodeURIComponent(path)}`, {
-    method: 'PUT',
-    headers: type ? { 'Content-Type': type } : {},
-    body,
-  })
-  if (!response.ok) throw new Error(await errorMessage(response))
+  for (let attempt = 1; ; attempt++) {
+    try {
+      // With no declared type the server works one out from the file name.
+      const response = await fetch(`/api/media/${folder}/${encodeURIComponent(path)}`, {
+        method: 'PUT',
+        headers: type ? { 'Content-Type': type } : {},
+        body,
+      })
+      if (response.ok) return
+      if (response.status === 409 && attempt > 1 && await storedSize(folder, path) === body.size) return
+      throw new Error(await errorMessage(response))
+    } catch (err) {
+      // fetch reports a network failure as a TypeError; anything else is a real answer
+      if (attempt >= 3 || !(err instanceof TypeError)) throw err
+    }
+  }
+}
+
+async function storedSize(folder: 'audio' | 'covers', path: string): Promise<number | null> {
+  const response = await fetch(`/media/${folder}/${encodeURIComponent(path)}`, { headers: { Range: 'bytes=0-0' } })
+  const total = /\/(\d+)$/.exec(response.headers.get('Content-Range') ?? '')
+  return total ? Number(total[1]) : null
+}
+
+// What to tell the admin when publishing or saving fails.
+export function explainError(err: unknown): string {
+  const reasons: Record<string, string> = {
+    too_large:    'el archivo supera los 50 MB',
+    wrong_type:   'el archivo no es un audio o una imagen',
+    exists:       'ya existe un archivo con ese nombre',
+    incomplete:   'la subida se cortó antes de terminar',
+    invalid_name: 'el nombre del archivo no es válido',
+    unauthorized: 'la sesión ha caducado, vuelve a entrar',
+    invalid:      'faltan datos o alguno no es válido',
+    timeout:      'el servidor no responde',
+  }
+  const message = err instanceof Error ? err.message : String(err)
+  if (err instanceof TypeError) return 'se perdió la conexión durante la subida'
+  return reasons[message] ?? message
 }
 
 // ── Live updates ──────────────────────────────────────────────────────────────
