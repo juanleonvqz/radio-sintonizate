@@ -107,9 +107,19 @@ Las reglas viven en el código del servidor (`src/server/auth/gate.ts` y los end
 
 ### Cuentas de administración
 
-Las cuentas se traspasaron desde el antiguo Supabase con su contraseña tal cual. Para añadir una nueva hace
-falta insertar una fila en `users` con el hash que genera `hashPassword`
-(`src/server/auth/password.ts`); no hay pantalla de registro a propósito.
+Las cuentas se traspasaron desde el antiguo Supabase con su contraseña tal cual. No hay pantalla de
+registro ni de "olvidé mi contraseña" a propósito: una cuenta es una fila en la tabla `users`.
+
+Para cambiar la contraseña de una cuenta (por ejemplo si se olvida), desde el servidor de desarrollo:
+
+```bash
+node scripts/set-password.mjs correo@ejemplo.com
+```
+
+Pide la contraseña dos veces sin mostrarla, la guarda y cierra la sesión de esa cuenta en todos los
+dispositivos. Necesita las credenciales de Cloudflare en el entorno; en el servidor el atajo
+`radio-password <correo>` las carga solo. Para añadir una cuenta nueva hace falta insertar antes la
+fila en `users` (id, email) y luego usar el mismo script.
 
 ### Restaurar desde la última copia
 
