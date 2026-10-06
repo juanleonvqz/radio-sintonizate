@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copies the audio and cover files of a Supabase export into the R2 bucket.
+// Copies the audio and cover files of a saved export into the R2 bucket.
 //
 //   node scripts/r2-upload.mjs <export-dir>
 //

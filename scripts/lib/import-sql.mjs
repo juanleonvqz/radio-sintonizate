@@ -1,5 +1,5 @@
-// Turns a Supabase export (see scripts/supabase-export.mjs) into the SQL that loads it
-// into D1. Pure: data in, text out, so it can be tested without a database.
+// Turns a saved export (the format of the last Supabase export, kept outside the repo)
+// into the SQL that loads it into D1. Pure: data in, text out, so it can be tested without a database.
 //
 // The SQL empties the tables first, so running it again replaces the earlier copy
 // instead of doubling it. That is what makes the final copy on switch day safe.
