@@ -107,21 +107,19 @@ Las reglas viven en el código del servidor (`src/server/auth/gate.ts` y los end
 
 ### Cuentas de administración
 
-Las cuentas se traspasaron desde Supabase con su contraseña tal cual. Para añadir una nueva hace
+Las cuentas se traspasaron desde el antiguo Supabase con su contraseña tal cual. Para añadir una nueva hace
 falta insertar una fila en `users` con el hash que genera `hashPassword`
 (`src/server/auth/password.ts`); no hay pantalla de registro a propósito.
 
-### Copia desde Supabase (migración)
+### Restaurar desde la última copia
 
-Los tres scripts de `scripts/` exportan el proyecto de Supabase y cargan la copia en D1 y R2.
-Necesitan `SUPABASE_DB_URL` (cadena de conexión del *session pooler*) en un `.env` ignorado por git,
-y las credenciales de Cloudflare en el entorno. Se pueden ejecutar varias veces: la carga sustituye
-lo que hubiera.
+La última exportación de Supabase (filas, cuentas y archivos, octubre de 2026) está guardada fuera
+del repositorio y en la copia de seguridad nocturna del servidor. Dos scripts de `scripts/` la
+cargan de nuevo en D1 y R2 si hiciera falta; sustituyen lo que hubiera:
 
 ```bash
-npm run supabase:export -- ~/export-radio
-npm run d1:import-sql -- ~/export-radio /tmp/radio.sql && npx wrangler d1 execute radio-sintonizate --remote --file /tmp/radio.sql
-npm run r2:upload -- ~/export-radio
+npm run d1:import-sql -- <carpeta-export> /tmp/radio.sql && npx wrangler d1 execute radio-sintonizate --remote --file /tmp/radio.sql
+npm run r2:upload -- <carpeta-export>
 ```
 
 ---

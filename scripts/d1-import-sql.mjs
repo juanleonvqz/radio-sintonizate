@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes the SQL that loads a Supabase export into D1.
+// Writes the SQL that loads a saved export (the format of the last Supabase export) into D1.
 //
 //   node scripts/d1-import-sql.mjs <export-dir> <out.sql>
 //   npx wrangler d1 execute radio-sintonizate --remote --file <out.sql>
