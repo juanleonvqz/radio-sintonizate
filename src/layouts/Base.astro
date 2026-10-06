@@ -62,8 +62,8 @@ const fullUrl  = Astro.url?.href ?? siteUrl
 
 
   <!-- ── PRELOAD key images — browser fetches them immediately ── -->
-  <link rel="preload" as="image" href="/logos/Logo_radio_sintonizate_White.jpg" />
-  <link rel="preload" as="image" href="/logos/Logo_IES_ELMayorazgo_White.png" />
+  <link rel="preload" as="image" href="/logos/radio-light.webp" media="(prefers-color-scheme: light)" />
+  <link rel="preload" as="image" href="/logos/radio-dark.webp"  media="(prefers-color-scheme: dark)" />
 
   <!-- ── FONTS ── -->
   <!-- Option A (default): Google Fonts CDN — easy, no setup needed -->
@@ -89,6 +89,11 @@ const fullUrl  = Astro.url?.href ?? siteUrl
         document.documentElement.classList.add('dark-pending')
       } else {
         document.documentElement.classList.add('light-pending')
+      }
+      // Gives a logo the variant for this theme before it starts loading, so a dark page
+      // never shows the light one first. Called right after each logo in the markup.
+      window.pickLogo = function (img) {
+        img.src = isDark ? img.dataset.dark : img.dataset.light
       }
     })()
   </script>

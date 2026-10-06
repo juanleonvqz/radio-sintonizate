@@ -1,5 +1,6 @@
 ---
-// Footer — logos swap with theme via .radio-logo-img and .school-logo-img classes
+// Footer. The logos take the variant for the current theme before they load (pickLogo,
+// defined in Base.astro) and swap when the theme is toggled (theme.ts).
 ---
 
 <footer>
@@ -8,7 +9,7 @@
   <!-- ── LOGOS ── -->
   <div class="footer-logos">
     <a class="footer-logo-block" href="/" aria-label="Radio Sintonízate">
-      <img class="footer-logo-img radio-logo-img" src="/logos/Logo_radio_sintonizate_White.jpg" alt="Radio Sintonízate" />
+      <img class="footer-logo-img radio-logo-img" data-light="/logos/radio-light.webp" data-dark="/logos/radio-dark.webp" alt="Radio Sintonízate" /><script is:inline>pickLogo(document.currentScript.previousElementSibling)</script>
       <div class="footer-logo-info">
         <span class="footer-logo-name">Radio Sintonízate</span>
         <span class="footer-logo-sub">La radio del IES El Mayorazgo</span>
@@ -16,7 +17,7 @@
     </a>
     <div class="footer-logo-divider"></div>
     <a class="footer-logo-block" href="https://www3.gobiernodecanarias.org/medusa/edublog/ieselmayorazgo/" target="_blank" rel="noopener" aria-label="IES El Mayorazgo">
-      <img class="footer-logo-img school-logo-img" src="/logos/Logo_IES_ELMayorazgo_White.png" alt="IES El Mayorazgo" />
+      <img class="footer-logo-img school-logo-img" data-light="/logos/school-light.webp" data-dark="/logos/school-dark.webp" alt="IES El Mayorazgo" /><script is:inline>pickLogo(document.currentScript.previousElementSibling)</script>
       <div class="footer-logo-info">
         <span class="footer-logo-name">IES El Mayorazgo</span>
         <span class="footer-logo-sub">Villa de La Orotava, Tenerife</span>
