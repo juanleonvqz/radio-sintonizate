@@ -650,8 +650,10 @@ body.light .school-logo-img {
   @keyframes fadeScaleIn { from { opacity:0;transform:scale(.95) } to { opacity:1;transform:scale(1) } }
 }
 
+/* Sticks to the top of the sheet while it scrolls, so it is always there to close */
 #ep-modal-close {
-  position: absolute; top: 14px; right: 14px;
+  position: sticky; top: 14px;
+  margin: 0 14px -36px auto;
   background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.15);
   border-radius: 50%; width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;

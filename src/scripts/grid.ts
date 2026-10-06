@@ -9,6 +9,16 @@ import { episodeCard, sortedByDate, fmtDate } from '../lib/cards'
 let activeF   = 'all'
 let searchQ   = ''
 let currentModalId: string | null = null
+// Opening an episode adds a step to the browser history, so the phone's back gesture
+// (or the back button) closes it instead of leaving the site.
+let modalInHistory = false
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    if (!modalInHistory) return
+    modalInHistory = false
+    closeEpisodeModal()
+  })
+}
 let reactionUnsub: (() => void) | null = null
 let commentUnsub:  (() => void) | null = null
 
@@ -330,6 +340,10 @@ export function openEpisodeModal(id: string) {
   modal.classList.add('on')
   document.body.style.overflow = 'hidden'
   startModalSync()
+  if (!modalInHistory) {
+    history.pushState({ episode: id }, '', location.href)
+    modalInHistory = true
+  }
 
   // ── Swipe down to close (mobile only) ────────────────────────────────────
   const sheet = document.getElementById('ep-modal-sheet')!
@@ -434,6 +448,12 @@ export function closeEpisodeModal() {
   const sheet = document.getElementById('ep-modal-sheet')
   if (sheet) { sheet.style.transform = ''; sheet.style.transition = '' }
   document.getElementById('ep-modal')?.classList.remove('on')
+  if (modalInHistory) {
+    // Closed from the page (the X, the backdrop, a swipe, Escape): drop the step added
+    // on opening, so going back later does not reopen nothing.
+    modalInHistory = false
+    history.back()
+  }
   document.body.style.overflow = ''
   currentModalId = null
   stopModalSync()
