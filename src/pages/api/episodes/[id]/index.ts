@@ -3,6 +3,7 @@ import { body, enter } from '../../../../server/auth/gate'
 import { deleteEpisode, getEpisode, readEpisodeFields, updateEpisode } from '../../../../server/content/episodes'
 import { json, mediaBucket } from '../../../../server/http'
 import { fileKey } from '../../../../server/media/bucket'
+import { AFTER_EPISODE_CHANGE, edgeCache, purge } from '../../../../server/edge-cache'
 
 const notFound = () => json({ error: 'not_found' }, 404)
 
@@ -24,7 +25,9 @@ export const PATCH: APIRoute = async (context) => {
   if (!fields) return json({ error: 'invalid' }, 400)
 
   const episode = await updateEpisode(gate.db, context.params.id!, fields)
-  return episode ? json(episode) : notFound()
+  if (!episode) return notFound()
+  await purge(edgeCache(), new URL(context.request.url).origin, AFTER_EPISODE_CHANGE)
+  return json(episode)
 }
 
 // DELETE /api/episodes/:id  ->  the episode that was removed. Admins only.
@@ -39,6 +42,7 @@ export const DELETE: APIRoute = async (context) => {
 
   const files = [fileKey('audio', episode.audio_path), fileKey('covers', episode.cover_path ?? undefined)].filter(key => key !== null)
   await mediaBucket(context)?.delete(files).catch(() => {})
+  await purge(edgeCache(), new URL(context.request.url).origin, AFTER_EPISODE_CHANGE)
 
   return json(episode)
 }

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { body, enter } from '../../../server/auth/gate'
 import { getSetting, setSetting } from '../../../server/content/settings'
 import { json } from '../../../server/http'
+import { AFTER_SETTING_CHANGE, edgeCache, purge } from '../../../server/edge-cache'
 
 // GET /api/settings/:key  ->  { value } (null when unset). Open to everyone.
 export const GET: APIRoute = async (context) => {
@@ -20,5 +21,6 @@ export const PUT: APIRoute = async (context) => {
   if (typeof value !== 'string') return json({ error: 'invalid' }, 400)
 
   await setSetting(gate.db, context.params.key!, value)
+  await purge(edgeCache(), new URL(context.request.url).origin, AFTER_SETTING_CHANGE(context.params.key!))
   return json({ value })
 }

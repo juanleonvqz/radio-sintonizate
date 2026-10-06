@@ -1,11 +1,14 @@
 ---
-// Default text, overridden by the admin through the site_settings table.
+// The text the admin saved (site_settings), or the default when none is saved yet.
 // A line break in the stored value is shown as one (white-space: pre-line).
+interface Props { text?: string | null; visible?: boolean }
+const { text = null, visible = true } = Astro.props
 const line1 = 'La radio oficial del IES El Mayorazgo, La Orotava, Tenerife. Aquí encontrarás todos nuestros programas, podcasts y emisiones.'
 const line2 = '¡Sintonízanos y forma parte de nuestra comunidad!'
+const body  = text ?? `${line1}\n${line2}`
 ---
 
-<div class="desc-banner" id="desc-banner-wrap">
+<div class="desc-banner" id="desc-banner-wrap" style={visible ? undefined : 'display:none'}>
   <div class="desc-icon">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.8">
       <circle cx="12" cy="12" r="3"/>
@@ -15,7 +18,6 @@ const line2 = '¡Sintonízanos y forma parte de nuestra comunidad!'
   </div>
   <div class="desc-text">
     <div class="desc-title">Bienvenidos a Radio Sintonízate</div>
-    <div class="desc-body" id="desc-body">{line1}
-{line2}</div>
+    <div class="desc-body" id="desc-body">{body}</div>
   </div>
 </div>
