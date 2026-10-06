@@ -111,11 +111,15 @@ Las cuentas se traspasaron desde el antiguo Supabase con su contraseña tal cual
 falta insertar una fila en `users` con el hash que genera `hashPassword`
 (`src/server/auth/password.ts`); no hay pantalla de registro a propósito.
 
-### Restaurar desde la última copia
+### Copia diaria y restauración
 
-La última exportación de Supabase (filas, cuentas y archivos, octubre de 2026) está guardada fuera
-del repositorio y en la copia de seguridad nocturna del servidor. Dos scripts de `scripts/` la
-cargan de nuevo en D1 y R2 si hiciera falta; sustituyen lo que hubiera:
+Cada noche, un temporizador del servidor de desarrollo (`radio-copy.timer`) ejecuta
+`scripts/pull-live.mjs`, que copia las filas, las cuentas y los archivos nuevos del sitio en vivo a
+`~/inbox/radio-sintonizate/live/`, carpeta que entra en la copia de seguridad cifrada de esa misma
+noche. Un archivo borrado del bucket se conserva en la copia a propósito.
+
+Esa copia (o la última exportación de Supabase, de octubre de 2026, guardada en el mismo sitio)
+se carga de nuevo en D1 y R2 con dos scripts; sustituyen lo que hubiera:
 
 ```bash
 npm run d1:import-sql -- <carpeta-export> /tmp/radio.sql && npx wrangler d1 execute radio-sintonizate --remote --file /tmp/radio.sql
