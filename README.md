@@ -11,7 +11,7 @@ Sitio web oficial de **Radio Sintonízate**, la radio del IES El Mayorazgo, La O
 | Capa | Tecnología |
 |------|-----------|
 | Frontend | [Astro](https://astro.build) SSR + TypeScript vanilla |
-| Backend | [Supabase](https://supabase.com) (Auth, Storage, Realtime, DB) |
+| Backend | Endpoints propios en Cloudflare Pages Functions: base de datos [D1](https://developers.cloudflare.com/d1/), archivos en [R2](https://developers.cloudflare.com/r2/), inicio de sesión propio |
 | Hosting | [Cloudflare Pages](https://pages.cloudflare.com) |
 | Fuentes | Bebas Neue · Playfair Display · Karla (self-hosted) |
 | Dominio | radiosintonizate.com |
@@ -49,20 +49,17 @@ cd radio-sintonizate
 npm install
 ```
 
-### 3. Variables de entorno
+### 3. Base de datos y archivos locales
 
-Copia el archivo de ejemplo y rellena tus credenciales de Supabase:
+No hace falta ningún archivo `.env`. La base de datos y el bucket de archivos locales los crea
+`wrangler` (viene con las dependencias) a partir de `wrangler.toml`:
 
 ```bash
-cp .env.example .env
+npx wrangler d1 migrations apply radio-sintonizate --local
 ```
 
-```env
-PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-Las encuentras en tu proyecto de Supabase → **Settings → API**.
+Para tener episodios en local, carga una exportación (ver más abajo) o crea una cuenta de
+administración e inserta episodios desde el panel.
 
 ### 4. Fuentes (primera vez)
 
@@ -80,58 +77,64 @@ Abre [http://localhost:4321](http://localhost:4321).
 
 ---
 
-## Supabase — configuración inicial
+## Cloudflare: base de datos, archivos y cuentas
 
-Ejecuta estos archivos SQL en orden desde **Supabase → SQL Editor**:
+El sitio se sirve desde el proyecto de Cloudflare Pages `radio-sintonizate`, que despliega la rama
+`main`. Los datos viven en Cloudflare, bajo jurisdicción de la UE:
 
-| Archivo | Qué hace |
-|---------|----------|
-| `supabase-schema.sql` | Tabla `episodes` + RLS |
-| `supabase-site-settings.sql` | Tabla `site_settings` (descripción, banner) |
-| `supabase-reactions.sql` | Tabla `reactions` (emojis por episodio) |
-| `supabase-comments.sql` | Tabla `comments` con moderación |
+| Recurso | Nombre | Contenido |
+|---------|--------|-----------|
+| D1 | `radio-sintonizate` | episodios, comentarios, reacciones, ajustes, cuentas de administración, sesiones |
+| R2 | `radio-sintonizate-media` | audio (`audio/…`) y portadas (`covers/…`) |
 
-### Buckets de Storage
+Ambos están enlazados al proyecto de Pages como `DB` y `MEDIA` (Settings → Bindings). El esquema
+está en `migrations/` y se aplica con:
 
-Crea dos buckets en **Supabase → Storage**, ambos **públicos**:
-
-- `audio` — archivos de audio (MP3)
-- `covers` — portadas de episodios (WebP)
-
-### RLS extra para el panel de administración
-
-Para que el admin pueda ver comentarios pendientes, ejecuta también:
-
-```sql
-create policy "comments: auth read all"
-  on public.comments for select
-  using (auth.role() = 'authenticated');
+```bash
+npx wrangler d1 migrations apply radio-sintonizate --remote
 ```
 
-### Usuario administrador
+### Permisos
 
-En **Supabase → Authentication → Users**, crea un usuario con email y contraseña. Esas mismas credenciales son las que usarás en el panel de admin del sitio.
+Las reglas viven en el código del servidor (`src/server/auth/gate.ts` y los endpoints de
+`src/pages/api/`), con una prueba por cada regla en `src/server/api-rules.test.ts`:
+
+- Cualquiera lee episodios, comentarios aprobados, reacciones y ajustes; deja comentarios (quedan
+  pendientes) y añade reacciones.
+- Solo una cuenta de administración con sesión iniciada publica, edita o borra episodios, sube
+  archivos, revisa comentarios y cambia los ajustes.
+- No existe el registro de usuarios: una cuenta de administración es una fila en la tabla `users`.
+
+### Cuentas de administración
+
+Las cuentas se traspasaron desde Supabase con su contraseña tal cual. Para añadir una nueva hace
+falta insertar una fila en `users` con el hash que genera `hashPassword`
+(`src/server/auth/password.ts`); no hay pantalla de registro a propósito.
+
+### Copia desde Supabase (migración)
+
+Los tres scripts de `scripts/` exportan el proyecto de Supabase y cargan la copia en D1 y R2.
+Necesitan `SUPABASE_DB_URL` (cadena de conexión del *session pooler*) en un `.env` ignorado por git,
+y las credenciales de Cloudflare en el entorno. Se pueden ejecutar varias veces: la carga sustituye
+lo que hubiera.
+
+```bash
+npm run supabase:export -- ~/export-radio
+npm run d1:import-sql -- ~/export-radio /tmp/radio.sql && npx wrangler d1 execute radio-sintonizate --remote --file /tmp/radio.sql
+npm run r2:upload -- ~/export-radio
+```
 
 ---
 
 ## Despliegue en Cloudflare Pages
 
-### Configuración del proyecto
-
 | Campo | Valor |
 |-------|-------|
 | Build command | `npm run build` |
 | Output directory | `dist` |
-| Node version | `18` |
+| Bindings | D1 `DB` → `radio-sintonizate`, R2 `MEDIA` → `radio-sintonizate-media` (jurisdicción `eu`) |
 
-### Variables de entorno en Cloudflare
-
-En **Pages → Settings → Environment variables**, añade:
-
-```
-PUBLIC_SUPABASE_URL      → tu URL de Supabase
-PUBLIC_SUPABASE_ANON_KEY → tu anon key de Supabase
-```
+No hacen falta variables de entorno. Cada rama tiene su *preview* en `<rama>.radio-sintonizate.pages.dev`.
 
 ### Dominio personalizado
 
@@ -182,12 +185,15 @@ src/
 ├── layouts/
 │   └── Base.astro              # HTML base, SEO, OG, preloads
 ├── lib/
-│   ├── supabase.ts             # Todas las llamadas a Supabase
+│   ├── api.ts                  # Todas las llamadas al servidor (/api y /media)
+│   ├── html.ts                 # Escape de texto antes de insertarlo en el DOM
 │   └── types.ts                # Interfaz Episode
 ├── pages/
 │   ├── index.astro             # Página principal
-│   ├── feed.xml.ts             # Feed RSS
-│   └── api/episodes.ts         # API endpoint de episodios
+│   ├── feed.xml.ts             # Feed RSS (desde D1)
+│   ├── api/                    # Endpoints: auth, episodios, comentarios, ajustes, subidas
+│   └── media/                  # Audio y portadas servidos desde R2
+├── server/                     # Lógica del servidor y sus pruebas (vitest)
 ├── scripts/
 │   ├── app.ts                  # Punto de entrada, inicialización
 │   ├── grid.ts                 # Grid de episodios + modal
@@ -207,12 +213,8 @@ src/
 
 | Servicio | Coste |
 |----------|-------|
-| Cloudflare Pages | Gratis |
-| Supabase (free tier) | Gratis hasta ~18 episodios largos en storage |
-| Supabase Pro (si se necesita) | ~25 $/mes |
+| Cloudflare Pages, D1 y R2 | Gratis con el uso actual (10 GB de archivos, sin coste por descargas) |
 | Dominio | ~10–15 $/año |
-
-El tier gratuito de Supabase incluye 1 GB de storage. Un episodio de 30 minutos en MP3 a 128 kbps ocupa ~55 MB, así que el límite se alcanza en torno a los 18 episodios. Con el plan Pro el límite sube a 100 GB.
 
 ---
 
@@ -223,6 +225,7 @@ El tier gratuito de Supabase incluye 1 GB de storage. Un episodio de 30 minutos 
 - [ ] Contador de escuchas por episodio
 - [ ] Toggle publicar/despublicar episodio sin eliminar
 - [ ] Render SSR de la lista de episodios (mejora SEO)
+- [ ] Pruebas en navegador real; hoy las de `src/server/` cubren el servidor y el recorrido de la página se hace con jsdom
 
 ---
 

@@ -24,6 +24,11 @@ export const PUT: APIRoute = async (context) => {
 
   if (await bucket.head(key)) return json({ error: 'exists' }, 409)
 
-  await bucket.put(key, context.request.body, { httpMetadata: { contentType: type } })
+  // Read the whole file first (50 MB at most): the bucket needs to know the length, and
+  // a connection that dropped halfway must not leave a truncated file behind.
+  const bytes = await context.request.arrayBuffer()
+  if (bytes.byteLength !== size) return json({ error: 'incomplete' }, 400)
+
+  await bucket.put(key, bytes, { httpMetadata: { contentType: type } })
   return json({ path: name }, 201)
 }

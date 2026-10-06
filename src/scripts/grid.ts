@@ -1,5 +1,5 @@
-import { coverUrl, audioUrl, getAudioDuration, getReactions, addReaction, subscribeToReactions, EMOJIS, getApprovedComments, submitComment, subscribeToComments } from '../lib/supabase'
-import type { ReactionCounts } from '../lib/supabase'
+import { coverUrl, audioUrl, getAudioDuration, getReactions, addReaction, subscribeToReactions, EMOJIS, getApprovedComments, submitComment, subscribeToComments } from '../lib/api'
+import type { ReactionCounts } from '../lib/api'
 import { eps, curId, playing, playEp, skip } from './player'
 import { shareEp } from './share'
 import type { Episode } from '../lib/types'
