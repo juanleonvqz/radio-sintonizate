@@ -23,10 +23,11 @@
       <img
         id="logo-img"
         class="logo-img radio-logo-img"
-        src="/logos/Logo_radio_sintonizate_White.jpg"
+        data-light="/logos/radio-light.webp"
+        data-dark="/logos/radio-dark.webp"
         alt="Radio Sintonízate"
         fetchpriority="high"
-      />
+      /><script is:inline>pickLogo(document.currentScript.previousElementSibling)</script>
       <div class="logo-text">
         <div class="eyebrow">IES El Mayorazgo · La Orotava</div>
         <h1 class="sname">Radio <em>Sintonízate</em></h1>
