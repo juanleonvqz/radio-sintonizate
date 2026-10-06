@@ -460,9 +460,11 @@ export function openEpisodeModal(id: string) {
       sent.style.display = 'flex'
       // Scroll success message into view
       sent.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    } catch {
+    } catch (err) {
       btn.disabled = false; btn.textContent = 'Enviar'
-      alert('Error al enviar. Inténtalo de nuevo.')
+      alert((err as Error).message === 'too_many'
+        ? 'Has enviado varios comentarios seguidos. Espera unos minutos e inténtalo de nuevo.'
+        : 'Error al enviar. Inténtalo de nuevo.')
     }
   })
 }

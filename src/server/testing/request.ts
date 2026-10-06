@@ -23,11 +23,14 @@ export interface Call {
   token?: string
   // Origin header; null leaves it out, as a non-browser client would.
   origin?: string | null
+  // The visitor's address, as Cloudflare reports it.
+  ip?: string
 }
 
 // The raw response, for endpoints that do not answer in JSON.
-export async function send(handler: APIRoute, { db, media, method = 'GET', path = '/api', params = {}, body, bytes, headers = {}, token, origin = SITE }: Call): Promise<Response> {
+export async function send(handler: APIRoute, { db, media, method = 'GET', path = '/api', params = {}, body, bytes, headers = {}, token, origin = SITE, ip }: Call): Promise<Response> {
   const all: Record<string, string> = { ...headers }
+  if (ip) all['CF-Connecting-IP'] = ip
   if (origin) all.Origin = origin
   if (token) all.Cookie = `${SESSION_COOKIE}=${token}`
   if (body !== undefined) all['Content-Type'] ??= 'application/json'
