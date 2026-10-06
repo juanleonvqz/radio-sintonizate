@@ -4,6 +4,7 @@ import { eps, curId, playing, playEp, skip } from './player'
 import { shareEp } from './share'
 import type { Episode } from '../lib/types'
 import { escapeHtml } from '../lib/html'
+import { episodeCard, sortedByDate, fmtDate } from '../lib/cards'
 
 let activeF   = 'all'
 let searchQ   = ''
@@ -114,59 +115,19 @@ function renderGrid() {
 
   const listened = getListened()
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (!a.date && !b.date) return 0
-    if (!a.date) return 1; if (!b.date) return -1
-    return b.date.localeCompare(a.date)
-  })
+  const sorted = sortedByDate(filtered)
 
   // Featured only when not searching and not filtered
   const showFeatured = !searchQ && activeF === 'all'
   const [featured, ...rest] = showFeatured ? sorted : [null, ...sorted]
 
-  const makeCard = (ep: Episode, isFeatured = false) => {
-    const cv        = coverUrl(ep.cover_path)
-    const isPlaying = ep.id === curId && playing
-    const isPaused  = ep.id === curId && !playing && !!curId
-    const isDone    = listened.has(ep.id)
-
-    return `<div class="card ${isFeatured ? 'card-featured' : ''} ${isPlaying ? 'playing' : ''} ${isPaused ? 'paused' : ''} ${isDone ? 'card-listened' : ''}" id="card-${ep.id}" data-id="${ep.id}">
-      <div class="cimg-wrap">
-        ${cv
-          ? `<img class="ccover" src="${cv}" alt="${escapeHtml(ep.title)}" loading="${isFeatured ? 'eager' : 'lazy'}">`
-          : `<div class="cph"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M6.343 6.343a8 8 0 1 0 11.314 0"/><path d="M9.172 9.172a4 4 0 1 0 5.656 0"/></svg></div>`}
-        <div class="now-playing-overlay" style="display:${isPlaying ? 'flex' : 'none'}">
-          <div class="np-bars"><span></span><span></span><span></span><span></span></div>
-          <span class="np-lbl">Reproduciendo</span>
-        </div>
-        ${isFeatured ? `<div class="featured-badge">Último episodio</div>` : ''}
-      </div>
-      <div class="cbody">
-        ${ep.date ? `<div class="cmonth">${monthBadge(ep.date)}</div>` : ''}
-        <div class="cprog">${escapeHtml(ep.program) || 'Radio Sintonízate'}</div>
-        <div class="ctitle">${escapeHtml(ep.title)}</div>
-        ${ep.description ? `<div class="cdesc">${escapeHtml(ep.description)}</div>` : ''}
-        ${!isDone ? `<div class="cno-desc">Escuchar episodio →</div>` : ''}
-        <div class="ctap-hint">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Toca para ver más
-        </div>
-        <div class="cfoot">
-          <span class="cdate">${fmtDate(ep.date)}</span>
-          <span class="cdur" id="dur-${ep.id}"></span>
-          <div class="cbtns">
-            <button class="sharebtn" data-share="${ep.id}" aria-label="Compartir">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            </button>
-            <button class="playbtn" data-play="${ep.id}" aria-label="${isPlaying ? 'Pausar' : 'Reproducir'}">
-              <svg class="card-play-ico"  width="14" height="14" viewBox="0 0 24 24" fill="#0C0906" style="display:${isPlaying ? 'none' : 'block'}"><polygon points="5,3 19,12 5,21"/></svg>
-              <svg class="card-pause-ico" width="14" height="14" viewBox="0 0 24 24" fill="#0C0906" style="display:${isPlaying ? 'block' : 'none'}"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>`
-  }
+  const makeCard = (ep: Episode, isFeatured = false) =>
+    episodeCard(ep, coverUrl(ep.cover_path), {
+      featured: isFeatured,
+      playing:  ep.id === curId && playing,
+      paused:   ep.id === curId && !playing && !!curId,
+      listened: listened.has(ep.id),
+    })
 
   // Featured latest + rest as rows
   grid.innerHTML = `<div class="episodes-flat">
@@ -567,24 +528,6 @@ function syncModal() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function monthBadge(d: string): string {
-  try {
-    const date = new Date(d + 'T12:00:00')
-    // "Diciembre 2025" — full month, capitalized
-    const m = date.toLocaleDateString('es-ES', { month: 'long' })
-    const capitalized = m.charAt(0).toUpperCase() + m.slice(1)
-    return `<span class="cmonth-badge">${capitalized} ${date.getFullYear()}</span>`
-  } catch { return '' }
-}
-function fmtDate(d: string | null): string {
-  if (!d) return ''
-  try {
-    return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    }).replace('.', '')
-  }
-  catch { return d }
-}
 function fmtDur(secs: number): string {
   const m = Math.floor(secs / 60), s = Math.floor(secs % 60)
   return m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}:${String(s).padStart(2,'0')}`

@@ -142,9 +142,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Load site description from localStorage ───────────────────────────────
   loadSiteDesc()
 
-  // ── Load episodes ─────────────────────────────────────────────────────────
+  // ── Episodes ──────────────────────────────────────────────────────────────
+  // The server put the list in the page already (index.astro); start from that.
+  // Without it (no database, or it failed), load in the browser as before.
   const grid = document.getElementById('grid')
-  if (grid) {
+  const seed = document.getElementById('episodes-json')?.textContent
+  let seeded = false
+  if (seed) {
+    try {
+      setEps(JSON.parse(seed))
+      renderAll()
+      checkDeepLink()
+      initSearch()
+      seeded = true
+    } catch { /* fall through to loading */ }
+  }
+
+  if (!seeded && grid) {
     grid.innerHTML = `<div class="episodes-flat">
       <div class="skeleton-featured"></div>
       <div class="episodes-rest">
@@ -153,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>`
   }
 
-  try {
+  if (!seeded) try {
     const data = await fetchEpisodes()
     setEps(data)
     renderAll()

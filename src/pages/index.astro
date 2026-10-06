@@ -6,18 +6,46 @@ import Player            from '../components/Player.astro'
 import AdminPanel        from '../components/AdminPanel.astro'
 import Footer            from '../components/Footer.astro'
 import '../styles/global.css'
+import type { Episode } from '../lib/types'
+import { episodeList } from '../lib/cards'
+import { database } from '../server/http'
+import { listEpisodes } from '../server/content/episodes'
+import { getSetting } from '../server/content/settings'
+
+// The episode list and the banner are rendered here, so the first view is complete
+// before any script runs. The same data is handed to the page script, which takes over
+// from there. Without a database (or if it fails) the page falls back to loading in
+// the browser, as it always did.
+let episodes: Episode[] | null = null
+let description: string | null = null
+let bannerVisible = true
+const db = database(Astro)
+if (db) {
+  try {
+    episodes = await listEpisodes(db)
+    const [text, visible] = await Promise.all([getSetting(db, 'site_description'), getSetting(db, 'banner_visible')])
+    description   = text
+    bannerVisible = visible !== '0'
+  } catch {
+    episodes = null
+  }
+}
+const coverFor = (path: string | null) => (path ? `/media/covers/${encodeURIComponent(path)}` : null)
+const listHtml = episodes ? episodeList(episodes, coverFor) : ''
+const seed     = episodes ? JSON.stringify(episodes).replace(/</g, '\\u003c') : null
+const count    = episodes ? `${episodes.length} episodio${episodes.length !== 1 ? 's' : ''}` : ''
 ---
 
 <Base>
 
   <Header />
-  <DescriptionBanner />
+  <DescriptionBanner text={description} visible={bannerVisible} />
 
   <main>
     <div class="mh">
       <h2 class="mtitle">Episodios</h2>
       <div class="mh-right">
-        <span class="ecount" id="ecount"></span>
+        <span class="ecount" id="ecount">{count}</span>
         <div class="search-box">
           <svg class="search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -40,13 +68,17 @@ import '../styles/global.css'
       </div>
     </div>
 
-    <!-- Episodes are rendered client-side by src/scripts/grid.ts -->
+    <!-- Rendered here for the first view; src/scripts/grid.ts re-renders it from then on -->
     <div class="grid" id="grid">
-      <div class="state-box">
-        <div class="state-ico"><div class="spinner"></div></div>
-        <h3>Cargando episodios…</h3>
-        <p>Conectando con Radio Sintonízate</p>
-      </div>
+      {episodes ? (
+        <Fragment set:html={listHtml} />
+      ) : (
+        <div class="state-box">
+          <div class="state-ico"><div class="spinner"></div></div>
+          <h3>Cargando episodios…</h3>
+          <p>Conectando con Radio Sintonízate</p>
+        </div>
+      )}
     </div>
   </main>
 
@@ -69,7 +101,9 @@ import '../styles/global.css'
     </div>
   </div>
 
-  <!-- Single entry point — Astro bundles and tree-shakes everything -->
+  {seed && <script is:inline type="application/json" id="episodes-json" set:html={seed} />}
+
+  <!-- Single entry point: Astro bundles and tree-shakes everything -->
   <script>
     import '../scripts/app'
   </script>
